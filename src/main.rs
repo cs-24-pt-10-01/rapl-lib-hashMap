@@ -15,6 +15,7 @@ const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
 const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
 const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 
+// NOTE: This will not work because the readmsr instruction requires kernel mode
 fn main() -> Result<()> {
     let test_file = CString::new("testy").unwrap();
 
