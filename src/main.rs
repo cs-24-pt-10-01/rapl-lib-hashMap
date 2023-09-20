@@ -3,7 +3,7 @@ use std::ffi::CString;
 use windows::{
     core::PCSTR,
     Win32::{
-        Foundation::{GENERIC_READ, HANDLE},
+        Foundation::HANDLE,
         Storage::FileSystem::{
             CreateFileA, ReadFile, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_SHARE_READ,
             OPEN_EXISTING,
