@@ -1,4 +1,4 @@
-use libc::{c_void, getpid, open, perror, pread, O_RDONLY};
+use libc::{c_void, getpid, open, perror, pread, EIO, ENXIO, O_RDONLY};
 use std::{ffi::CString, mem::size_of};
 
 // Impl this:
@@ -22,6 +22,18 @@ fn open_msr(core: i32) -> i32 {
     let fd = unsafe { open(path.as_ptr(), O_RDONLY) };
 
     println!("fd: {}", fd);
+
+    if fd < 0 {
+        let errno = unsafe { *libc::__errno_location() };
+        if errno == ENXIO {
+            println!("rdmsr: No CPU {}", core);
+        } else if errno == EIO {
+            println!("rdmsr: CPU {} doesn't support MSRs", core);
+        } else {
+            let pread_err = CString::new("rdmsr:open").unwrap();
+            unsafe { perror(pread_err.as_ptr()) };
+        }
+    }
     fd
 }
 
@@ -38,10 +50,6 @@ fn read_msr(fd: i32, which: i64) -> i64 {
     //println!("val: {}", val);
 
     data
-}
-
-pub fn add(a: i32, b: i32) -> i32 {
-    a + b
 }
 
 const MSR_RAPL_POWER_UNIT: i64 = 0x606;
