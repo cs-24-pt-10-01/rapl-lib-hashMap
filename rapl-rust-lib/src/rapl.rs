@@ -7,6 +7,8 @@ pub fn start_rapl_impl() -> usize {
 
 fn rapl_init() {}
 
+fn detect_cpu() {}
+
 fn open_msr() {}
 
 fn read_msr() {}
