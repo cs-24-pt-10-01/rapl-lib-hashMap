@@ -1,4 +1,4 @@
-use libc::{c_void, getpid, perror, pread};
+use libc::{c_void, getpid, open, perror, pread, O_RDONLY};
 use std::{ffi::CString, mem::size_of};
 
 // Impl this:
@@ -17,7 +17,13 @@ fn rapl_init() {}
 fn detect_cpu() {}
 
 // https://github.com/greensoftwarelab/Energy-Languages/blob/master/RAPL/rapl.c#L14
-fn open_msr() {}
+fn open_msr(core: i32) -> i32 {
+    let path = CString::new(format!("/dev/cpu/{}/msr", core)).unwrap();
+    let fd = unsafe { open(path.as_ptr(), O_RDONLY) };
+
+    println!("fd: {}", fd);
+    fd
+}
 
 // https://github.com/greensoftwarelab/Energy-Languages/blob/master/RAPL/rapl.c#L38
 fn read_msr(fd: i32, which: i64) -> i64 {
@@ -25,8 +31,8 @@ fn read_msr(fd: i32, which: i64) -> i64 {
     let data_ptr = data as *mut c_void;
 
     if unsafe { pread(fd, data_ptr, size_of::<i64>(), which) } != size_of::<i64>() as isize {
-        let ayy = CString::new("rdmsr:pread").unwrap();
-        unsafe { perror(ayy.as_ptr()) };
+        let pread_err = CString::new("rdmsr:pread").unwrap();
+        unsafe { perror(pread_err.as_ptr()) };
     }
 
     //println!("val: {}", val);
@@ -46,7 +52,8 @@ mod tests {
 
     #[test]
     fn test_read_msr() {
-        let fd = 0;
+        let fd = open_msr(0);
+
         let result = read_msr(fd, MSR_RAPL_POWER_UNIT);
 
         assert_eq!(result, 1234);
