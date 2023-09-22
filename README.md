@@ -7,3 +7,5 @@ This does not work on Windows because `readmsr` requires kernel access. It will 
 https://github.com/RRZE-HPC/likwid/issues/373
 
 `ls -la /dev/cpu/*/msr`
+
+`sudo modprobe msr`
