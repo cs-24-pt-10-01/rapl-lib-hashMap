@@ -23,5 +23,8 @@ jobs:
       - name: Build
         run: cargo build --verbose
 
+      - name: RAPL test
+        run: ls -la /dev/cpu/*/msr
+
       - name: Tests
         run: cargo test --verbose
