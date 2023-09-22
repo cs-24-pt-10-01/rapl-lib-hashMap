@@ -20,6 +20,10 @@ https://github.com/amd/amd_energy
 
 https://github.com/RRZE-HPC/likwid/issues/373
 
+List the CPU's MSR's on Linux.
+
 `ls -la /dev/cpu/*/msr`
+
+Enable MSR.
 
 `sudo modprobe msr`
