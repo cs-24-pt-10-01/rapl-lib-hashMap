@@ -2,6 +2,10 @@
 
 The repository for RAPL testing.
 
+## GitHub Actions
+
+An issue currently too is that MSR's are not accessible with GitHub Actions, likely due to that it runs under Docker.
+
 ## Windows
 
 Currently this does not work on Windows because `readmsr` requires kernel access. It will require a kernel driver to make it work. Intel Power Gadget can support it by design but it will only be for Intel processors in that case.
