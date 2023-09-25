@@ -35,6 +35,39 @@ const MSR_RAPL_POWER_UNIT: u32 = 0x606;
 */
 const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
+/*
+Sample with making driver service and starting it:
+
+#include <windows.h>
+
+int main() {
+    SC_HANDLE scm, service;
+
+    scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    if (scm == NULL) {
+        // Handle error
+        return 1;
+    }
+
+    service = CreateService(scm, L"YourDriverName", L"Your Driver Display Name",
+        SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
+        L"Path to your driver file", NULL, NULL, NULL, NULL, NULL);
+
+    if (service == NULL) {
+        // Handle error
+        CloseServiceHandle(scm);
+        return 2;
+    }
+
+    StartService(service, 0, NULL);
+
+    CloseServiceHandle(service);
+    CloseServiceHandle(scm);
+
+    return 0;
+}
+*/
+
 fn main() -> Result<()> {
     // TODO: Logging, multiple cores, multiple cpu's support (Intel)
 
@@ -43,6 +76,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
     let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").expect("failed to create driver name");
     let h_device = unsafe {
         CreateFileA(
