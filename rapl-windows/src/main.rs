@@ -44,9 +44,23 @@ fn main() -> Result<()> {
     }
     .expect("failed to open driver");
 
-    let input_data: [u8; 4] = [1, 2, 3, 4];
-    unsafe { DeviceIoControl(h_device, IOCTL_OLS_READ_MSR, None, 0, None, 0, None, None) }
-        .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
+    let input_number: u32 = 0x12345;
+    let input_data: [u8; 4] = input_number.to_le_bytes();
+
+    let output_data: [u8; 8] = [0; 8];
+    unsafe {
+        DeviceIoControl(
+            h_device,
+            IOCTL_OLS_READ_MSR,
+            Some(input_data.as_ptr() as _),
+            input_data.len() as u32,
+            Some(output_data.as_ptr() as _),
+            0,
+            None,
+            None,
+        )
+    }
+    .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
 
     unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
