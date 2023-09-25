@@ -22,6 +22,7 @@ const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 #define IOCTL_OLS_READ_MSR \
     CTL_CODE(OLS_TYPE, 0x821, METHOD_BUFFERED, FILE_ANY_ACCESS)
 */
+const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
 fn main() -> Result<()> {
     if !is_admin() {
@@ -43,19 +44,9 @@ fn main() -> Result<()> {
     }
     .expect("failed to open driver");
 
-    unsafe {
-        DeviceIoControl(
-            h_device,
-            IOCTL_MTP_CUSTOM_COMMAND,
-            None,
-            0,
-            None,
-            0,
-            None,
-            None,
-        )
-    }
-    .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
+    let input_data: [u8; 4] = [1, 2, 3, 4];
+    unsafe { DeviceIoControl(h_device, IOCTL_OLS_READ_MSR, None, 0, None, 0, None, None) }
+        .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
 
     unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
