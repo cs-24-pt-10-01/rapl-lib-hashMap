@@ -4,12 +4,13 @@ use windows::{
     core::PCSTR,
     Win32::{
         Foundation::{CloseHandle, GENERIC_READ, HANDLE},
+        Media::DeviceManager::IOCTL_MTP_CUSTOM_COMMAND,
         Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY},
-        Storage::FileSystem::{
-            CreateFileA, ReadFile, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_SHARE_READ,
-            OPEN_EXISTING,
+        Storage::FileSystem::{CreateFileA, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, OPEN_EXISTING},
+        System::{
+            Threading::{GetCurrentProcess, OpenProcessToken},
+            IO::DeviceIoControl,
         },
-        System::Threading::{GetCurrentProcess, OpenProcessToken},
     },
 };
 
@@ -19,11 +20,11 @@ const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 
 fn main() -> Result<()> {
     if !is_admin() {
-        println!("Please run this program as administrator");
+        println!("please run this program as administrator");
         return Ok(());
     }
 
-    let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").unwrap();
+    let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").expect("failed to create driver name");
     let h_device = unsafe {
         CreateFileA(
             PCSTR(driver_name.as_ptr() as *const u8), // File path
@@ -35,12 +36,23 @@ fn main() -> Result<()> {
             None,                                     // Template file (not used here)
         )
     }
-    .unwrap();
+    .expect("failed to open driver");
 
-    unsafe { CloseHandle(h_device) }.unwrap();
+    unsafe {
+        DeviceIoControl(
+            h_device,
+            IOCTL_MTP_CUSTOM_COMMAND,
+            None,
+            0,
+            None,
+            0,
+            None,
+            None,
+        )
+    }
+    .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
 
-    //let aweraer = HANDLE(123);
-    //unsafe { ReadFile(aweraer, None, None, None).unwrap() };
+    unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
     Ok(())
 }
