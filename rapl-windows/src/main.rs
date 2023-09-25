@@ -85,6 +85,28 @@ fn open_driver() -> Result<HANDLE> {
     }?)
 }
 
+fn read_msr(h_device: HANDLE, msr: u32) -> Result<u64> {
+    let input_data: [u8; 4] = msr.to_le_bytes();
+
+    let output_data: [u8; 8] = [0; 8];
+    let mut lp_bytes_returned: u32 = 0;
+    unsafe {
+        DeviceIoControl(
+            h_device,
+            IOCTL_OLS_READ_MSR,
+            Some(input_data.as_ptr() as _),
+            input_data.len() as u32,
+            Some(output_data.as_ptr() as _),
+            output_data.len() as u32,
+            Some(&mut lp_bytes_returned as _),
+            None,
+        )
+    }?;
+
+    println!("lp_bytes_returned: {}", lp_bytes_returned);
+    Ok(u64::from_le_bytes(output_data))
+}
+
 fn main() -> Result<()> {
     // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
     if !is_admin() {
@@ -105,28 +127,7 @@ fn main() -> Result<()> {
     // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
     let h_device = open_driver().expect("failed to open driver handle");
 
-    let input_number: u32 = AMD_MSR_PWR_UNIT;
-    let input_data: [u8; 4] = input_number.to_le_bytes();
-
-    let output_data: [u8; 8] = [0; 8];
-    let mut lp_bytes_returned: u32 = 0;
-    unsafe {
-        DeviceIoControl(
-            h_device,
-            IOCTL_OLS_READ_MSR,
-            Some(input_data.as_ptr() as _),
-            input_data.len() as u32,
-            Some(output_data.as_ptr() as _),
-            output_data.len() as u32,
-            Some(&mut lp_bytes_returned as _),
-            None,
-        )
-    }
-    .expect("failed to send IOCTL_OLS_READ_MSR");
-
-    println!("lp_bytes_returned: {}", lp_bytes_returned);
-
-    let output_number = u64::from_le_bytes(output_data);
+    let output_number = read_msr(h_device, AMD_MSR_PWR_UNIT).expect("failed to read MSR register");
     println!("output_number: {}", output_number);
 
     let time_unit = (output_number & AMD_TIME_UNIT_MASK) >> 16;
