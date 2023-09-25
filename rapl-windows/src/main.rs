@@ -17,6 +17,10 @@ const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
 const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
 const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 
+const AMD_TIME_UNIT_MASK: u64 = 0xF0000;
+const AMD_ENERGY_UNIT_MASK: u64 = 0x1F00;
+const AMD_POWER_UNIT_MASK: u64 = 0xF;
+
 /*
 #define IOCTL_OLS_READ_MSR \
     CTL_CODE(OLS_TYPE, 0x821, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -66,6 +70,14 @@ fn main() -> Result<()> {
 
     let output_number = u64::from_le_bytes(output_data);
     println!("output_number: {}", output_number);
+
+    let time_unit = (output_number & AMD_TIME_UNIT_MASK) >> 16;
+    let energy_unit = (output_number & AMD_ENERGY_UNIT_MASK) >> 8;
+    let power_unit = output_number & AMD_POWER_UNIT_MASK;
+
+    println!("time_unit: {}", time_unit);
+    println!("energy_unit: {}", energy_unit);
+    println!("power_unit: {}", power_unit);
 
     unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
