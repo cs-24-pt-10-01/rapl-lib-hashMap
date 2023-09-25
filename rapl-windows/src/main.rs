@@ -69,7 +69,7 @@ int main() {
 */
 
 fn main() -> Result<()> {
-    // TODO: Logging, multiple cores, multiple cpu's support (Intel)
+    // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple cpu's support (Intel)
 
     if !is_admin() {
         println!("this program must run as administrator");
