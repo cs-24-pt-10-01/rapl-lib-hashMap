@@ -13,6 +13,10 @@ use windows::{
     },
 };
 
+// RAPL Intel: https://github.com/tfett/RAPL/blob/master/rapl-read.c
+// RAPL AMD: https://me.sakana.moe/2023/09/06/measuring-cpu-power-consumption/
+// Read MSR on Windows: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/WinRing0/OpenLibSys.c#L313
+
 // AMD
 const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
 const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
@@ -53,7 +57,7 @@ fn main() -> Result<()> {
     }
     .expect("failed to open driver");
 
-    let input_number: u32 = AMD_MSR_PWR_UNIT;
+    let input_number: u32 = MSR_RAPL_POWER_UNIT;
     let input_data: [u8; 4] = input_number.to_le_bytes();
 
     let output_data: [u8; 8] = [0; 8];
@@ -70,7 +74,7 @@ fn main() -> Result<()> {
             None,
         )
     }
-    .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
+    .expect("failed to send IOCTL_OLS_READ_MSR");
 
     println!("lp_bytes_returned: {}", lp_bytes_returned);
 
