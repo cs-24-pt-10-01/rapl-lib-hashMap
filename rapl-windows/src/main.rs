@@ -1,5 +1,6 @@
 use anyhow::Result;
 use std::ffi::CString;
+use sysinfo::{CpuExt, System, SystemExt};
 use windows::{
     core::PCSTR,
     Win32::{
@@ -16,6 +17,7 @@ use windows::{
 // RAPL Intel: https://github.com/tfett/RAPL/blob/master/rapl-read.c
 // RAPL AMD: https://me.sakana.moe/2023/09/06/measuring-cpu-power-consumption/
 // Read MSR on Windows: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/WinRing0/OpenLibSys.c#L313
+// Windows RAPL Driver: https://github.com/hubblo-org/windows-rapl-driver/tree/master
 
 // AMD
 const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
@@ -69,11 +71,17 @@ int main() {
 */
 
 fn main() -> Result<()> {
-    // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple cpu's support (Intel)
-
+    // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
     if !is_admin() {
         println!("this program must run as administrator");
         return Ok(());
+    }
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    for cpu in sys.cpus() {
+        println!("{}", cpu.vendor_id());
     }
 
     // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
