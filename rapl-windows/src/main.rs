@@ -86,12 +86,23 @@ int main() {
 }
 */
 
+pub fn bench_test(n: i32) -> i32 {
+    let mut val: i32 = 0;
+    for _ in 0..n {
+        val += 1;
+    }
+    val
+}
+
 fn main() -> Result<()> {
     // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
     if !is_admin() {
         eprintln!("this program must run as administrator");
         return Ok(());
     }
+
+    //println!("Fibonacci: {}", fibonacci(900));
+    println!("Bench test: {}", bench_test(1000000000));
 
     let sys = System::new_all();
     match sys.cpus().first().expect("failed getting CPU").vendor_id() {
