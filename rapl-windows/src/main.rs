@@ -130,13 +130,17 @@ fn main() -> Result<()> {
     let output_number = read_msr(h_device, AMD_MSR_PWR_UNIT).expect("failed to read MSR register");
     println!("output_number: {}", output_number);
 
-    let time_unit = (output_number & AMD_TIME_UNIT_MASK) >> 16;
-    let energy_unit = (output_number & AMD_ENERGY_UNIT_MASK) >> 8;
-    let power_unit = output_number & AMD_POWER_UNIT_MASK;
+    let time_unit = ((output_number & AMD_TIME_UNIT_MASK) >> 16) as f64;
+    let energy_unit = ((output_number & AMD_ENERGY_UNIT_MASK) >> 8) as f64;
+    let power_unit = (output_number & AMD_POWER_UNIT_MASK) as f64;
+    println!(
+        "time_unit: {}, energy_unit: {}, power_unit: {}, absolute_unit: 69420",
+        time_unit, energy_unit, power_unit
+    );
 
-    println!("time_unit: {}", time_unit);
-    println!("energy_unit: {}", energy_unit);
-    println!("power_unit: {}", power_unit);
+    let time_unit_d = time_unit.powf(0.5);
+    let energy_unit_d = energy_unit.powf(0.5);
+    let power_unit_d = power_unit.powf(0.5);
 
     unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
