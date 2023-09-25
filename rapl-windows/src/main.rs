@@ -4,7 +4,6 @@ use windows::{
     core::PCSTR,
     Win32::{
         Foundation::{CloseHandle, GENERIC_READ, HANDLE},
-        Media::DeviceManager::IOCTL_MTP_CUSTOM_COMMAND,
         Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY},
         Storage::FileSystem::{CreateFileA, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, OPEN_EXISTING},
         System::{
@@ -44,7 +43,7 @@ fn main() -> Result<()> {
     }
     .expect("failed to open driver");
 
-    let input_number: u32 = AMD_MSR_PACKAGE_ENERGY;
+    let input_number: u32 = AMD_MSR_PWR_UNIT;
     let input_data: [u8; 4] = input_number.to_le_bytes();
 
     let output_data: [u8; 8] = [0; 8];
