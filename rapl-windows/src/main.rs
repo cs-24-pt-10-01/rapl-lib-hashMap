@@ -70,9 +70,9 @@ int main() {
 }
 */
 
-fn open_driver() -> HANDLE {
+fn open_driver() -> Result<HANDLE> {
     let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").expect("failed to create driver name");
-    unsafe {
+    Ok(unsafe {
         CreateFileA(
             PCSTR(driver_name.as_ptr() as *const u8), // File path
             GENERIC_READ.0,                           // Access mode (read-only in this example)
@@ -82,8 +82,7 @@ fn open_driver() -> HANDLE {
             FILE_ATTRIBUTE_NORMAL,                    // File attributes (normal for regular files)
             None,                                     // Template file (not used here)
         )
-    }
-    .expect("failed to open driver")
+    }?)
 }
 
 fn main() -> Result<()> {
@@ -104,7 +103,7 @@ fn main() -> Result<()> {
     }
 
     // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
-    let h_device = open_driver();
+    let h_device = open_driver().expect("failed to open driver handle");
 
     let input_number: u32 = AMD_MSR_PWR_UNIT;
     let input_data: [u8; 4] = input_number.to_le_bytes();
