@@ -70,23 +70,9 @@ int main() {
 }
 */
 
-fn main() -> Result<()> {
-    // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
-    if !is_admin() {
-        println!("this program must run as administrator");
-        return Ok(());
-    }
-
-    let mut sys = System::new_all();
-    sys.refresh_all();
-
-    for cpu in sys.cpus() {
-        println!("{}", cpu.vendor_id());
-    }
-
-    // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
+fn open_driver() -> HANDLE {
     let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").expect("failed to create driver name");
-    let h_device = unsafe {
+    unsafe {
         CreateFileA(
             PCSTR(driver_name.as_ptr() as *const u8), // File path
             GENERIC_READ.0,                           // Access mode (read-only in this example)
@@ -97,7 +83,28 @@ fn main() -> Result<()> {
             None,                                     // Template file (not used here)
         )
     }
-    .expect("failed to open driver");
+    .expect("failed to open driver")
+}
+
+fn main() -> Result<()> {
+    // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
+    if !is_admin() {
+        println!("this program must run as administrator");
+        return Ok(());
+    }
+
+    let sys = System::new_all();
+    match sys.cpus().first().expect("failed getting CPU").vendor_id() {
+        "GenuineIntel" => println!("Intel CPU detected"),
+        "AuthenticAMD" => println!("AMD CPU detected"),
+        _ => {
+            println!("unknown CPU detected");
+            return Ok(());
+        }
+    }
+
+    // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
+    let h_device = open_driver();
 
     let input_number: u32 = AMD_MSR_PWR_UNIT;
     let input_data: [u8; 4] = input_number.to_le_bytes();
