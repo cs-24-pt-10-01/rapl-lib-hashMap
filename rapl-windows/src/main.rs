@@ -44,10 +44,11 @@ fn main() -> Result<()> {
     }
     .expect("failed to open driver");
 
-    let input_number: u32 = 0x12345;
+    let input_number: u32 = AMD_MSR_PACKAGE_ENERGY;
     let input_data: [u8; 4] = input_number.to_le_bytes();
 
     let output_data: [u8; 8] = [0; 8];
+    let mut lp_bytes_returned: u32 = 0;
     unsafe {
         DeviceIoControl(
             h_device,
@@ -55,12 +56,17 @@ fn main() -> Result<()> {
             Some(input_data.as_ptr() as _),
             input_data.len() as u32,
             Some(output_data.as_ptr() as _),
-            0,
-            None,
+            output_data.len() as u32,
+            Some(&mut lp_bytes_returned as _),
             None,
         )
     }
     .expect("failed to send IOCTL_MTP_CUSTOM_COMMAND");
+
+    println!("lp_bytes_returned: {}", lp_bytes_returned);
+
+    let output_number = u64::from_le_bytes(output_data);
+    println!("output_number: {}", output_number);
 
     unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
