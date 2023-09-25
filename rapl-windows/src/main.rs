@@ -89,7 +89,7 @@ fn open_driver() -> HANDLE {
 fn main() -> Result<()> {
     // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
     if !is_admin() {
-        println!("this program must run as administrator");
+        eprintln!("this program must run as administrator");
         return Ok(());
     }
 
