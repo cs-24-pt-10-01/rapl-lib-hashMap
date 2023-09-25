@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::ffi::CString;
+use std::{ffi::CString, thread, time::Duration};
 use sysinfo::{CpuExt, System, SystemExt};
 use windows::{
     core::PCSTR,
@@ -14,7 +14,7 @@ use windows::{
     },
 };
 
-// RAPL Intel: https://github.com/tfett/RAPL/blob/master/rapl-read.c
+// RAPL Intel: https://github.com/tfett/RAPL/blob/master/rapwl-read.c
 // RAPL AMD: https://me.sakana.moe/2023/09/06/measuring-cpu-power-consumption/
 // Read MSR on Windows: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/WinRing0/OpenLibSys.c#L313
 // Windows RAPL Driver: https://github.com/hubblo-org/windows-rapl-driver/tree/master
@@ -127,20 +127,69 @@ fn main() -> Result<()> {
     // TODO: Install driver ourselves: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/LibreHardwareMonitorLib/Hardware/KernelDriver.cs#L40
     let h_device = open_driver().expect("failed to open driver handle");
 
-    let output_number = read_msr(h_device, AMD_MSR_PWR_UNIT).expect("failed to read MSR register");
+    let output_number =
+        read_msr(h_device, AMD_MSR_PWR_UNIT).expect("failed to read AMD_MSR_PWR_UNIT");
     println!("output_number: {}", output_number);
 
     let time_unit = ((output_number & AMD_TIME_UNIT_MASK) >> 16) as f64;
     let energy_unit = ((output_number & AMD_ENERGY_UNIT_MASK) >> 8) as f64;
     let power_unit = (output_number & AMD_POWER_UNIT_MASK) as f64;
     println!(
-        "time_unit: {}, energy_unit: {}, power_unit: {}, absolute_unit: 69420",
+        "time_unit: {}, energy_unit: {}, power_unit: {}",
         time_unit, energy_unit, power_unit
     );
 
     let time_unit_d = time_unit.powf(0.5);
     let energy_unit_d = energy_unit.powf(0.5);
     let power_unit_d = power_unit.powf(0.5);
+    println!(
+        "time_unit_d: {}, energy_unit_d: {}, power_unit_d: {}",
+        time_unit_d, energy_unit_d, power_unit_d
+    );
+
+    // Read core energy stuff
+    let core_energy_raw =
+        read_msr(h_device, AMD_MSR_CORE_ENERGY).expect("failed to read AMD_MSR_CORE_ENERGY") as f64;
+    let package_raw = read_msr(h_device, AMD_MSR_PACKAGE_ENERGY)
+        .expect("failed to read AMD_MSR_PACKAGE_ENERGY") as f64;
+    let core_energy = (core_energy_raw * energy_unit_d) as u64;
+    let package_energy = (package_raw * energy_unit_d) as u64;
+
+    println!(
+        "core_energy: {}, package_energy: {}",
+        core_energy, package_energy
+    );
+
+    // Sleep for 10 seconds
+    println!("sleeping for 10 seconds");
+    thread::sleep(Duration::from_secs(10));
+
+    // Read core energy stuff again
+    let core_energy_raw =
+        read_msr(h_device, AMD_MSR_CORE_ENERGY).expect("failed to read AMD_MSR_CORE_ENERGY") as f64;
+    let package_raw = read_msr(h_device, AMD_MSR_PACKAGE_ENERGY)
+        .expect("failed to read AMD_MSR_PACKAGE_ENERGY") as f64;
+
+    let core_energy_delta = (core_energy_raw * energy_unit_d) as u64;
+    let package_energy_delta = (package_raw * energy_unit_d) as u64;
+
+    println!(
+        "core_energy_delta: {}, package_energy_delta: {}",
+        core_energy_delta, package_energy_delta
+    );
+
+    let core_energy_diff = core_energy_delta - core_energy;
+    let package_diff = package_energy_delta - package_energy;
+
+    println!(
+        "core_energy_diff: {}, package_diff: {}",
+        core_energy_diff, package_diff
+    );
+
+    println!(
+        "Energy used: {}W, Package: {}W",
+        core_energy_diff, package_diff
+    );
 
     unsafe { CloseHandle(h_device) }.expect("failed to close driver handle");
 
