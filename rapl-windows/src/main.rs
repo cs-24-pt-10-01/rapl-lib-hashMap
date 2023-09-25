@@ -1,5 +1,9 @@
 use anyhow::Result;
-use std::{ffi::CString, thread, time::Duration};
+use std::{
+    ffi::CString,
+    thread,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 use sysinfo::{CpuExt, System, SystemExt};
 use windows::{
     core::PCSTR,
@@ -82,43 +86,6 @@ int main() {
 }
 */
 
-fn open_driver() -> Result<HANDLE> {
-    let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").expect("failed to create driver name");
-    Ok(unsafe {
-        CreateFileA(
-            PCSTR(driver_name.as_ptr() as *const u8), // File path
-            GENERIC_READ.0,                           // Access mode (read-only in this example)
-            FILE_SHARE_READ,                          // Share mode (0 for exclusive access)
-            None,                                     // Security attributes (can be None)
-            OPEN_EXISTING,                            // Creation disposition
-            FILE_ATTRIBUTE_NORMAL,                    // File attributes (normal for regular files)
-            None,                                     // Template file (not used here)
-        )
-    }?)
-}
-
-fn read_msr(h_device: HANDLE, msr: u32) -> Result<u64> {
-    let input_data: [u8; 4] = msr.to_le_bytes();
-
-    let output_data: [u8; 8] = [0; 8];
-    let mut lp_bytes_returned: u32 = 0;
-    unsafe {
-        DeviceIoControl(
-            h_device,
-            IOCTL_OLS_READ_MSR,
-            Some(input_data.as_ptr() as _),
-            input_data.len() as u32,
-            Some(output_data.as_ptr() as _),
-            output_data.len() as u32,
-            Some(&mut lp_bytes_returned as _),
-            None,
-        )
-    }?;
-
-    println!("lp_bytes_returned: {}", lp_bytes_returned);
-    Ok(u64::from_le_bytes(output_data))
-}
-
 fn main() -> Result<()> {
     // TODO: Logging, multiple cores (maybe only possible to read all cores at once, although Linux seems to have multiple since MSR for each CPU), multiple CPU support (Intel)
     if !is_admin() {
@@ -158,6 +125,33 @@ fn main() -> Result<()> {
         "time_unit_d: {}, energy_unit_d: {}, power_unit_d: {}",
         time_unit_d, energy_unit_d, power_unit_d
     );
+
+    let mut vec = Vec::new();
+    for _ in 0..100000 {
+        let core_energy_raw = read_msr(h_device, AMD_MSR_CORE_ENERGY)
+            .expect("failed to read AMD_MSR_CORE_ENERGY") as f64;
+        let package_raw = read_msr(h_device, AMD_MSR_PACKAGE_ENERGY)
+            .expect("failed to read AMD_MSR_PACKAGE_ENERGY") as f64;
+        let core_energy = (core_energy_raw * energy_unit_d) as u64;
+        let package_energy = (package_raw * energy_unit_d) as u64;
+
+        let current_time = SystemTime::now();
+        let duration_since_epoch = current_time
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+        let timestamp = duration_since_epoch.as_millis();
+
+        vec.push((core_energy, package_energy, timestamp));
+    }
+
+    for i in 0..1000 {
+        println!(
+            "core_energy: {}, package_energy: {}, timestamp: {}",
+            vec[i].0, vec[i].1, vec[i].2
+        );
+    }
+
+    return Ok(());
 
     // Read core energy stuff
     let core_energy_raw =
@@ -229,4 +223,41 @@ fn is_admin() -> bool {
     }
 
     token_elevation.TokenIsElevated != 0
+}
+
+fn open_driver() -> Result<HANDLE> {
+    let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").expect("failed to create driver name");
+    Ok(unsafe {
+        CreateFileA(
+            PCSTR(driver_name.as_ptr() as *const u8), // File path
+            GENERIC_READ.0,                           // Access mode (read-only in this example)
+            FILE_SHARE_READ,                          // Share mode (0 for exclusive access)
+            None,                                     // Security attributes (can be None)
+            OPEN_EXISTING,                            // Creation disposition
+            FILE_ATTRIBUTE_NORMAL,                    // File attributes (normal for regular files)
+            None,                                     // Template file (not used here)
+        )
+    }?)
+}
+
+fn read_msr(h_device: HANDLE, msr: u32) -> Result<u64> {
+    let input_data: [u8; 4] = msr.to_le_bytes();
+
+    let output_data: [u8; 8] = [0; 8];
+    let mut lp_bytes_returned: u32 = 0;
+    unsafe {
+        DeviceIoControl(
+            h_device,
+            IOCTL_OLS_READ_MSR,
+            Some(input_data.as_ptr() as _),
+            input_data.len() as u32,
+            Some(output_data.as_ptr() as _),
+            output_data.len() as u32,
+            Some(&mut lp_bytes_returned as _),
+            None,
+        )
+    }?;
+
+    //println!("lp_bytes_returned: {}", lp_bytes_returned);
+    Ok(u64::from_le_bytes(output_data))
 }
