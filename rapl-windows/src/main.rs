@@ -3,11 +3,13 @@ use std::ffi::CString;
 use windows::{
     core::PCSTR,
     Win32::{
-        Foundation::HANDLE,
+        Foundation::{CloseHandle, GENERIC_READ, HANDLE},
+        Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY},
         Storage::FileSystem::{
             CreateFileA, ReadFile, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_SHARE_READ,
             OPEN_EXISTING,
         },
+        System::Threading::{GetCurrentProcess, OpenProcessToken},
     },
 };
 
@@ -15,25 +17,53 @@ const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
 const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
 const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 
-// NOTE: This will not work because the readmsr instruction requires kernel mode
 fn main() -> Result<()> {
-    let test_file = CString::new("testy").unwrap();
+    if !is_admin() {
+        println!("Please run this program as administrator");
+        return Ok(());
+    }
 
-    let hFile = unsafe {
+    let driver_name = CString::new("\\\\.\\WinRing0_1_2_0").unwrap();
+    let h_device = unsafe {
         CreateFileA(
-            PCSTR(test_file.as_ptr() as *const u8), // File path
-            FILE_GENERIC_READ.0,                    // Access mode (read-only in this example)
-            FILE_SHARE_READ,                        // Share mode (0 for exclusive access)
-            None,                                   // Security attributes (can be NULL)
-            OPEN_EXISTING,                          // Creation disposition
-            FILE_ATTRIBUTE_NORMAL,                  // File attributes (normal for regular files)
-            None,                                   // Template file (not used here)
+            PCSTR(driver_name.as_ptr() as *const u8), // File path
+            GENERIC_READ.0,                           // Access mode (read-only in this example)
+            FILE_SHARE_READ,                          // Share mode (0 for exclusive access)
+            None,                                     // Security attributes (can be NULL)
+            OPEN_EXISTING,                            // Creation disposition
+            FILE_ATTRIBUTE_NORMAL,                    // File attributes (normal for regular files)
+            None,                                     // Template file (not used here)
         )
     }
     .unwrap();
 
-    let aweraer = HANDLE(123);
-    unsafe { ReadFile(aweraer, None, None, None).unwrap() };
+    unsafe { CloseHandle(h_device) }.unwrap();
+
+    //let aweraer = HANDLE(123);
+    //unsafe { ReadFile(aweraer, None, None, None).unwrap() };
 
     Ok(())
+}
+
+// check if running as admin using the windows crate
+fn is_admin() -> bool {
+    let mut h_token = HANDLE::default();
+    unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut h_token as _) }.unwrap();
+
+    let mut token_elevation = TOKEN_ELEVATION { TokenIsElevated: 0 };
+    let token_elevation_ptr = &mut token_elevation as *mut TOKEN_ELEVATION;
+    let mut cb_size = std::mem::size_of::<TOKEN_ELEVATION>() as u32;
+
+    unsafe {
+        GetTokenInformation(
+            h_token,
+            TokenElevation,
+            Some(token_elevation_ptr as _),
+            cb_size,
+            &mut cb_size as _,
+        )
+        .unwrap();
+    }
+
+    token_elevation.TokenIsElevated != 0
 }
