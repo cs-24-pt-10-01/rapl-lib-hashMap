@@ -57,7 +57,7 @@ fn main() -> Result<()> {
     }
     .expect("failed to open driver");
 
-    let input_number: u32 = MSR_RAPL_POWER_UNIT;
+    let input_number: u32 = AMD_MSR_PWR_UNIT;
     let input_data: [u8; 4] = input_number.to_le_bytes();
 
     let output_data: [u8; 8] = [0; 8];
