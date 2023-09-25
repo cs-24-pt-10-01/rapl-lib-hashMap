@@ -26,7 +26,7 @@ const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
 fn main() -> Result<()> {
     if !is_admin() {
-        println!("please run this program as administrator");
+        println!("this program must run as administrator");
         return Ok(());
     }
 
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
             PCSTR(driver_name.as_ptr() as *const u8), // File path
             GENERIC_READ.0,                           // Access mode (read-only in this example)
             FILE_SHARE_READ,                          // Share mode (0 for exclusive access)
-            None,                                     // Security attributes (can be NULL)
+            None,                                     // Security attributes (can be None)
             OPEN_EXISTING,                            // Creation disposition
             FILE_ATTRIBUTE_NORMAL,                    // File attributes (normal for regular files)
             None,                                     // Template file (not used here)
