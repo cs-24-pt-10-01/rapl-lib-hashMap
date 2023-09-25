@@ -28,6 +28,8 @@ const AMD_POWER_UNIT_MASK: u64 = 0xF;
 const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
 fn main() -> Result<()> {
+    // TODO: Logging, multiple cores, multiple cpu's support (Intel)
+
     if !is_admin() {
         println!("this program must run as administrator");
         return Ok(());
