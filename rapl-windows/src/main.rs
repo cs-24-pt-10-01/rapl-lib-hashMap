@@ -13,6 +13,7 @@ use windows::{
     },
 };
 
+// AMD
 const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
 const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
 const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
@@ -20,6 +21,9 @@ const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 const AMD_TIME_UNIT_MASK: u64 = 0xF0000;
 const AMD_ENERGY_UNIT_MASK: u64 = 0x1F00;
 const AMD_POWER_UNIT_MASK: u64 = 0xF;
+
+// Intel
+const MSR_RAPL_POWER_UNIT: u32 = 0x606;
 
 /*
 #define IOCTL_OLS_READ_MSR \
