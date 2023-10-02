@@ -148,9 +148,8 @@ pub fn stop_rapl_impl() {
     */
 
     let mut wtr = WriterBuilder::new().from_writer(file);
-    wtr.write_record(["Energy"]).unwrap();
-    wtr.serialize(rapl_start_val).unwrap();
-    wtr.serialize(rapl_end_val).unwrap();
+    wtr.write_record(["Start,End"]).unwrap();
+    wtr.serialize((rapl_start_val, rapl_end_val)).unwrap();
     wtr.flush().unwrap();
 }
 
