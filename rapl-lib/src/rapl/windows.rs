@@ -106,9 +106,9 @@ pub fn start_rapl_impl() {
         // Read power unit and store it the power units variable
         let pwr_unit = match PROCESSOR_TYPE.get().unwrap() {
             ProcessorType::Intel => read_msr(*RAPL_DRIVER.get().unwrap(), MSR_RAPL_POWER_UNIT)
-                .expect("failed to read MSR_RAPL_PKG"),
+                .expect("failed to read MSR_RAPL_POWER_UNIT"),
             ProcessorType::AMD => read_msr(*RAPL_DRIVER.get().unwrap(), AMD_MSR_PWR_UNIT)
-                .expect("failed to read AMD_MSR_PACKAGE_ENERGY"),
+                .expect("failed to read AMD_MSR_PWR_UNIT"),
         };
         RAPL_POWER_UNITS.get_or_init(|| pwr_unit);
     });
