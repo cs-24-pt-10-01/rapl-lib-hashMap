@@ -57,3 +57,13 @@ Stop:
 Delete:
 
 `sc delete rapl`
+
+## How to run tests
+This may be changed in the future
+
+### Example with fibonacci sequence and python python
+1. Build the rapl code with `cargo build` in root
+2. Download, install and start libreHardwareMonitor
+3. Call the benchmarking code (with administrative priviliges):
+    - ``` python '.\benchmarks\fibonacci sequence\bench.py' ```
+4. The results can be found in "test.csv" in the root folder
