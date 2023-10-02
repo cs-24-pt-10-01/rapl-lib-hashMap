@@ -10,6 +10,8 @@ An issue currently too is that MSR's are not accessible with GitHub Actions, lik
 
 Currently this does not work on Windows because `readmsr` requires kernel access. It will require a kernel driver to make it work. Intel Power Gadget can support it by design but it will only be for Intel processors in that case.
 
+Solution found: Use LibreHardwareMonitor's driver. It is open source and can be used for this purpose.
+
 ## RAPL test
 
 https://github.com/djselbeck/rapl-read-ryzen
@@ -31,3 +33,27 @@ List the CPU's MSR's on Linux.
 Enable MSR.
 
 `sudo modprobe msr`
+
+## Install driver on Windows
+
+Use command prompt as administrator.
+
+Query for all drivers:
+
+`sc query type= driver`
+
+Create:
+
+`sc create rapl type= kernel binPath= "full path to driver here"`
+
+Start:
+
+`sc start rapl`
+
+Stop:
+
+`sc stop rapl`
+
+Delete:
+
+`sc delete rapl`
