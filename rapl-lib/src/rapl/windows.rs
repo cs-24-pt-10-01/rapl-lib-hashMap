@@ -140,15 +140,24 @@ pub fn stop_rapl_impl() {
     // Load in the atomic value
     let rapl_start_val = RAPL_START.load(Ordering::Relaxed);
 
-    // Open the file to write to CSV
+    let cpu_type = match PROCESSOR_TYPE.get().unwrap() {
+        ProcessorType::Intel => "Intel",
+        ProcessorType::AMD => "AMD",
+    };
+
+    // Open the file to write to CSV. First argument is CPU type, second is RAPL power units
     let file = OpenOptions::new()
         .append(true)
         .create(true)
-        .open("test.csv")
+        .open(format!(
+            "{}_{}.csv",
+            cpu_type,
+            RAPL_POWER_UNITS.get().unwrap()
+        ))
         .unwrap();
 
     /*
-    TODO: Revise if we can even use timestamps
+    // TODO: Revise if we can even use timestamps
 
     let current_time = SystemTime::now();
     let duration_since_epoch = current_time
@@ -157,20 +166,9 @@ pub fn stop_rapl_impl() {
     let timestamp = duration_since_epoch.as_millis();
     */
 
-    let cpu_type = match PROCESSOR_TYPE.get().unwrap() {
-        ProcessorType::Intel => "Intel",
-        ProcessorType::AMD => "AMD",
-    };
-
     let mut wtr = WriterBuilder::new().from_writer(file);
-    wtr.write_record(["CPU", "Units", "Start", "End"]).unwrap();
-    wtr.serialize((
-        cpu_type,
-        RAPL_POWER_UNITS.get().unwrap(),
-        rapl_start_val,
-        rapl_end_val,
-    ))
-    .unwrap();
+    wtr.write_record(["Start", "End"]).unwrap();
+    wtr.serialize((rapl_start_val, rapl_end_val)).unwrap();
     wtr.flush().unwrap();
 }
 
