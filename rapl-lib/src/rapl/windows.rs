@@ -41,7 +41,7 @@ pub enum RaplError {
 const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
 // AMD
-//const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
+const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
 //const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
 const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
 
@@ -52,7 +52,7 @@ const AMD_POWER_UNIT_MASK: u64 = 0xF;
 */
 
 // Intel
-//const MSR_RAPL_POWER_UNIT: u32 = 0x606;
+const MSR_RAPL_POWER_UNIT: u32 = 0x606;
 const MSR_RAPL_PKG: u32 = 0x611;
 /*
 const MSR_RAPL_PP0: u32 = 0x639;
@@ -73,6 +73,7 @@ static RAPL_START: AtomicU64 = AtomicU64::new(0);
 
 static RAPL_INIT: Once = Once::new();
 static RAPL_DRIVER: OnceCell<HANDLE> = OnceCell::new();
+static RAPL_POWER_UNITS: OnceCell<u64> = OnceCell::new();
 
 static PROCESSOR_TYPE: OnceCell<ProcessorType> = OnceCell::new();
 #[allow(clippy::upper_case_acronyms)]
@@ -101,6 +102,15 @@ pub fn start_rapl_impl() {
                 panic!("unknown CPU detected: {}", cpu);
             }
         };
+
+        // Read power unit and store it the power units variable
+        let pwr_unit = match PROCESSOR_TYPE.get().unwrap() {
+            ProcessorType::Intel => read_msr(*RAPL_DRIVER.get().unwrap(), MSR_RAPL_POWER_UNIT)
+                .expect("failed to read MSR_RAPL_PKG"),
+            ProcessorType::AMD => read_msr(*RAPL_DRIVER.get().unwrap(), AMD_MSR_PWR_UNIT)
+                .expect("failed to read AMD_MSR_PACKAGE_ENERGY"),
+        };
+        RAPL_POWER_UNITS.get_or_init(|| pwr_unit);
     });
 
     // Read MSR based on the processor type
@@ -147,9 +157,20 @@ pub fn stop_rapl_impl() {
     let timestamp = duration_since_epoch.as_millis();
     */
 
+    let cpu_type = match PROCESSOR_TYPE.get().unwrap() {
+        ProcessorType::Intel => "Intel",
+        ProcessorType::AMD => "AMD",
+    };
+
     let mut wtr = WriterBuilder::new().from_writer(file);
-    wtr.write_record(["Start", "End"]).unwrap();
-    wtr.serialize((rapl_start_val, rapl_end_val)).unwrap();
+    wtr.write_record(["CPU", "Units", "Start", "End"]).unwrap();
+    wtr.serialize((
+        cpu_type,
+        RAPL_POWER_UNITS.get().unwrap(),
+        rapl_start_val,
+        rapl_end_val,
+    ))
+    .unwrap();
     wtr.flush().unwrap();
 }
 
