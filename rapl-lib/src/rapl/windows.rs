@@ -52,9 +52,9 @@ const AMD_POWER_UNIT_MASK: u64 = 0xF;
 */
 
 // Intel
-const MSR_RAPL_POWER_UNIT: u32 = 0x606;
-/*
+//const MSR_RAPL_POWER_UNIT: u32 = 0x606;
 const MSR_RAPL_PKG: u32 = 0x611;
+/*
 const MSR_RAPL_PP0: u32 = 0x639;
 const MSR_RAPL_PP1: u32 = 0x641;
 const MSR_RAPL_DRAM: u32 = 0x619;
@@ -105,8 +105,8 @@ pub fn start_rapl_impl() {
 
     // Read MSR based on the processor type
     let msr_val = match PROCESSOR_TYPE.get().unwrap() {
-        ProcessorType::Intel => read_msr(*RAPL_DRIVER.get().unwrap(), MSR_RAPL_POWER_UNIT)
-            .expect("failed to read MSR_RAPL_POWER_UNIT"),
+        ProcessorType::Intel => read_msr(*RAPL_DRIVER.get().unwrap(), MSR_RAPL_PKG)
+            .expect("failed to read MSR_RAPL_PKG"),
         ProcessorType::AMD => read_msr(*RAPL_DRIVER.get().unwrap(), AMD_MSR_PACKAGE_ENERGY)
             .expect("failed to read AMD_MSR_PACKAGE_ENERGY"),
     };
@@ -121,8 +121,8 @@ pub fn start_rapl_impl() {
 pub fn stop_rapl_impl() {
     // Read the RAPL value
     let rapl_end_val = match PROCESSOR_TYPE.get().unwrap() {
-        ProcessorType::Intel => read_msr(*RAPL_DRIVER.get().unwrap(), MSR_RAPL_POWER_UNIT)
-            .expect("failed to read MSR_RAPL_POWER_UNIT"),
+        ProcessorType::Intel => read_msr(*RAPL_DRIVER.get().unwrap(), MSR_RAPL_PKG)
+            .expect("failed to read MSR_RAPL_PKG"),
         ProcessorType::AMD => read_msr(*RAPL_DRIVER.get().unwrap(), AMD_MSR_PACKAGE_ENERGY)
             .expect("failed to read AMD_MSR_PACKAGE_ENERGY"),
     };
