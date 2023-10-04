@@ -82,6 +82,16 @@ enum ProcessorType {
     AMD,
 }
 
+#[cfg(intel)]
+fn intel() {
+    intelyoo
+}
+
+#[cfg(amd)]
+fn amd() {
+    amdyoo
+}
+
 pub fn start_rapl_impl() {
     // Initialize RAPL driver on first call
     RAPL_INIT.call_once(|| {
