@@ -24,8 +24,8 @@ fn main() -> Result<()> {
 
     rapl_impl::start_rapl_impl();
 
-    for _i in 0..10 {
-        println!("waddup");
+    for i in 0..10 {
+        println!("test {}", i);
     }
 
     rapl_impl::stop_rapl_impl();

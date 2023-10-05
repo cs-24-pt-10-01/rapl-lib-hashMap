@@ -30,6 +30,9 @@ use windows::{
 // Read MSR on Windows: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/cada6b76b009105aadd9bb2821a7c4cae5cca431/WinRing0/OpenLibSys.c#L313
 // Windows RAPL Driver: https://github.com/hubblo-org/windows-rapl-driver/tree/master
 
+// Use File Open on Windows instead
+// https://doc.rust-lang.org/stable/std/os/windows/io/trait.FromRawHandle.html
+
 #[derive(Error, Debug)]
 pub enum RaplError {
     #[error("windows error")]
@@ -44,9 +47,16 @@ const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
 #[cfg(amd)]
 mod amd {
-    pub const AMD_MSR_PWR_UNIT: u32 = 0xC0010299;
-    //const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A;
-    pub const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B;
+    /*
+    https://lore.kernel.org/lkml/20180817163442.10065-2-calvin.walton@kepstin.ca/
+
+    "A notable difference from the Intel implementation is that AMD reports
+    the "Cores" energy usage separately for each core, rather than a
+    per-package total"
+     */
+    pub const AMD_MSR_PWR_UNIT: u32 = 0xC0010299; // Similar to Intel MSR_RAPL_POWER_UNIT
+    pub const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A; // Similar to Intel PP0_ENERGY_STATUS (PP1 is for the GPU)
+    pub const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B; // Similar to Intel PKG_ENERGY_STATUS (This is for the whole socket)
 
     /*
     const AMD_TIME_UNIT_MASK: u64 = 0xF0000;

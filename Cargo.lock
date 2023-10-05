@@ -159,7 +159,6 @@ name = "rapl-lib"
 version = "0.1.0"
 dependencies = [
  "csv",
- "libc",
  "once_cell",
  "sysinfo",
  "thiserror",
