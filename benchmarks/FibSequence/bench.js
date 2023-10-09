@@ -1,5 +1,10 @@
-const runCount = 100
-const fibParam = 47
+const os = require("os");
+
+const fibParam = process.argv[2];
+const runCount = process.argv[3];
+const libPath = os.platform() == "win32"?
+  "target\\debug\\rapl_lib.dll":
+  "target/debug/librapl_lib.so"
 
 function fib(n) {
     var a = 0, b = 1, t;
@@ -12,7 +17,7 @@ function fib(n) {
   }
 
 const koffi = require('koffi');
-const lib = koffi.load('target\\debug\\rapl_lib.dll');
+const lib = koffi.load(libPath);
 
 const start = lib.func('int start_rapl()');
 const stop = lib.func('void stop_rapl()');

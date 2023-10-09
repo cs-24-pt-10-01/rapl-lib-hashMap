@@ -61,9 +61,17 @@ Delete:
 ## How to run tests
 This may be changed in the future
 
-### Example with fibonacci sequence and python python
-1. Build the rapl code with `cargo build` in root
-2. Download, install and start libreHardwareMonitor
+### how to run with runBench.sh (only works on linux)
+1. Build the rapl code with `cargo build` from root
+2. Call the script with `sudo sh runBench.sh`
+3. The results will be put in csv files in root after the script is finished 
+
+note: running the script from SSH requires the usage of tools like nohup:
+``` sudo nohup sh runBench.sh ```
+
+### how to run Fibonacci sequence with python
+1. Build the rapl code with `cargo build` from root
+2. Download, install and start libreHardwareMonitor (not required for linux)
 3. Call the benchmarking code (with administrative priviliges):
     - ``` python '.\benchmarks\fibonacci sequence\bench.py' ```
 4. The results can be found in "test.csv" in the root folder

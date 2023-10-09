@@ -1,9 +1,18 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-const int count = 100;
-const int fibVal = 47;
-const string pathToLib = @"target\debug\rapl_lib.dll";
+// inspired from https://stackoverflow.com/questions/24374658/check-the-operating-system-at-compile-time 
+#if _LINUX
+    const string pathToLib = @"target/debug/librapl_lib.so";
+#elif _WINDOWS
+    const string pathToLib = @"target\debug\rapl_lib.dll";
+#else
+    const string pathToLib = "none";
+#endif
+
+string[] arguments = Environment.GetCommandLineArgs();
+uint count = uint.Parse(arguments[2]);
+uint fibVal = uint.Parse(arguments[1]);
 
 // DLL imports
 [DllImport(pathToLib)]

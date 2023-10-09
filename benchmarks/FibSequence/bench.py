@@ -1,9 +1,12 @@
 # NOTE MUST BE CALLED FROM ROOT
 
 from ctypes import *
+import sys
+import platform
 
-test_count = 100
-fib_param = 47
+fib_param = int(sys.argv[1])
+test_count =  int(sys.argv[2])
+lib_path = "target\\debug\\rapl_lib.dll" if platform.system() == "Windows" else "target/debug/librapl_lib.so"
 
 # test method
 def fibIter(n):
@@ -16,7 +19,7 @@ def fibIter(n):
     return fib
 
 # start lib
-dll = cdll.LoadLibrary("target/debug/librapl_lib.so")
+dll = cdll.LoadLibrary(lib_path)
 
 for i in range(test_count):
     # start recording
