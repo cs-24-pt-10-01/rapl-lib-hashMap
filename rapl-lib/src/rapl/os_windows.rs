@@ -1,17 +1,6 @@
-#[cfg(amd)]
-use crate::rapl::windows::amd::{AMD_MSR_PACKAGE_ENERGY, AMD_MSR_PWR_UNIT};
-
-#[cfg(intel)]
-use crate::rapl::windows::intel::{MSR_RAPL_PKG, MSR_RAPL_POWER_UNIT};
-
-use csv::{Writer, WriterBuilder};
+use crate::rapl::RaplError;
 use once_cell::sync::OnceCell;
-use std::{
-    ffi::CString,
-    fs::{File, OpenOptions},
-    sync::Once,
-};
-use thiserror::Error;
+use std::{ffi::CString, sync::Once};
 use windows::{
     core::PCSTR,
     Win32::{
@@ -33,11 +22,9 @@ use windows::{
 // Use File Open on Windows instead
 // https://doc.rust-lang.org/stable/std/os/windows/io/trait.FromRawHandle.html
 
-#[derive(Error, Debug)]
-pub enum RaplError {
-    #[error("windows error")]
-    Windows(#[from] windows::core::Error),
-}
+// Get all drivers: sc query type=driver
+// Stop manually in CMD: sc stop R0LibreHardwareMonitor
+// Delete manually in CMD: sc delete R0LibreHardwareMonitor
 
 /*
 #define IOCTL_OLS_READ_MSR \
@@ -45,171 +32,23 @@ pub enum RaplError {
 */
 const IOCTL_OLS_READ_MSR: u32 = 0x9C402084;
 
-#[cfg(amd)]
-mod amd {
-    /*
-    https://lore.kernel.org/lkml/20180817163442.10065-2-calvin.walton@kepstin.ca/
-
-    "A notable difference from the Intel implementation is that AMD reports
-    the "Cores" energy usage separately for each core, rather than a
-    per-package total"
-     */
-    pub const AMD_MSR_PWR_UNIT: u32 = 0xC0010299; // Similar to Intel MSR_RAPL_POWER_UNIT
-    pub const AMD_MSR_CORE_ENERGY: u32 = 0xC001029A; // Similar to Intel PP0_ENERGY_STATUS (PP1 is for the GPU)
-    pub const AMD_MSR_PACKAGE_ENERGY: u32 = 0xC001029B; // Similar to Intel PKG_ENERGY_STATUS (This is for the whole socket)
-
-    /*
-    const AMD_TIME_UNIT_MASK: u64 = 0xF0000;
-    const AMD_ENERGY_UNIT_MASK: u64 = 0x1F00;
-    const AMD_POWER_UNIT_MASK: u64 = 0xF;
-    */
-}
-
-#[cfg(intel)]
-mod intel {
-    pub const MSR_RAPL_POWER_UNIT: u32 = 0x606;
-    pub const MSR_RAPL_PKG: u32 = 0x611;
-    /*
-    const MSR_RAPL_PP0: u32 = 0x639;
-    const MSR_RAPL_PP1: u32 = 0x641;
-    const MSR_RAPL_DRAM: u32 = 0x619;
-
-    const INTEL_TIME_UNIT_MASK: u64 = 0xF000;
-    const INTEL_ENGERY_UNIT_MASK: u64 = 0x1F00;
-    const INTEL_POWER_UNIT_MASK: u64 = 0x0F;
-
-    const INTEL_TIME_UNIT_OFFSET: u64 = 0x10;
-    const INTEL_ENGERY_UNIT_OFFSET: u64 = 0x08;
-    const INTEL_POWER_UNIT_OFFSET: u64 = 0;
-    */
-}
-
-static mut RAPL_START: u64 = 0;
 //static RAPL_STOP: AtomicU64 = AtomicU64::new(0);
 
 static RAPL_INIT: Once = Once::new();
 static RAPL_DRIVER: OnceCell<HANDLE> = OnceCell::new();
-static RAPL_POWER_UNITS: OnceCell<u64> = OnceCell::new();
-
-static mut CSV_WRITER: Option<Writer<File>> = None;
-
-fn read_rapl_power_unit() -> Result<u64, RaplError> {
-    #[cfg(intel)]
-    {
-        read_msr(MSR_RAPL_POWER_UNIT)
-    }
-
-    #[cfg(amd)]
-    {
-        read_msr(AMD_MSR_PWR_UNIT)
-    }
-}
-
-fn read_rapl_pkg_energy_stat() -> Result<u64, RaplError> {
-    #[cfg(intel)]
-    {
-        read_msr(MSR_RAPL_PKG)
-    }
-
-    #[cfg(amd)]
-    {
-        read_msr(AMD_MSR_PACKAGE_ENERGY)
-    }
-}
-
-fn get_cpu_type() -> &'static str {
-    #[cfg(intel)]
-    {
-        "Intel"
-    }
-
-    #[cfg(amd)]
-    {
-        "AMD"
-    }
-}
 
 pub fn start_rapl_impl() {
     // Initialize RAPL driver on first call
     RAPL_INIT.call_once(|| {
-        // Check if running as admin due to driver requirement
+        // Check if running as admin due to the driver requirement
         if !is_admin() {
-            panic!("not running as admin");
+            panic!("not running as admin, this is required for the RAPL driver to work");
         }
 
         let h_device = open_driver()
             .expect("failed to open driver handle, make sure the driver is installed and running");
         RAPL_DRIVER.get_or_init(|| h_device);
-
-        // Read power unit and store it the power units variable
-        let pwr_unit = read_rapl_power_unit().expect("failed to read RAPL power unit");
-        RAPL_POWER_UNITS.get_or_init(|| pwr_unit);
     });
-
-    // Read MSR based on the processor type
-    let rapl_pkg_energy_start_val =
-        read_rapl_pkg_energy_stat().expect("failed to read pkg energy stat");
-
-    // Safety: RAPL_START is only accessed in this function and only from a single thread
-    unsafe { RAPL_START = rapl_pkg_energy_start_val };
-}
-
-// Get all drivers: sc query type=driver
-// Stop manually in CMD: sc stop R0LibreHardwareMonitor
-// Delete manually in CMD: sc delete R0LibreHardwareMonitor
-
-pub fn stop_rapl_impl() {
-    // Read the RAPL PKG end value
-    let rapl_pkg_energy_end_val =
-        read_rapl_pkg_energy_stat().expect("failed to read pkg energy stat");
-
-    // Load in the RAPL start value
-    // Safety: RAPL_START is only accessed in this function and only from a single thread
-    let rapl_start_val = unsafe { RAPL_START };
-
-    let cpu_type = get_cpu_type();
-
-    // Open the file to write to CSV. First argument is CPU type, second is RAPL power units
-
-    /*
-    // TODO: Revise if we can even use timestamps
-
-    let current_time = SystemTime::now();
-    let duration_since_epoch = current_time
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    let timestamp = duration_since_epoch.as_millis();
-    */
-
-    let wtr = match unsafe { CSV_WRITER.as_mut() } {
-        Some(wtr) => wtr,
-        None => {
-            // Open the file to write to CSV. First argument is CPU type, second is RAPL power units
-            let file = OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(format!(
-                    "{}_{}.csv",
-                    cpu_type,
-                    RAPL_POWER_UNITS.get().unwrap()
-                ))
-                .unwrap();
-
-            // Create the CSV writer
-            let mut wtr = WriterBuilder::new().from_writer(file);
-            wtr.write_record(["PkgStart", "PkgEnd"]).unwrap();
-
-            // Store the CSV writer in a static variable
-            unsafe { CSV_WRITER = Some(wtr) };
-
-            // Return a mutable reference to the CSV writer
-            unsafe { CSV_WRITER.as_mut().unwrap() }
-        }
-    };
-
-    wtr.serialize((rapl_start_val, rapl_pkg_energy_end_val))
-        .unwrap();
-    wtr.flush().unwrap();
 }
 
 // check if running as admin using the windows crate
@@ -250,7 +89,20 @@ fn open_driver() -> Result<HANDLE, RaplError> {
     }?)
 }
 
-fn read_msr(msr: u32) -> Result<u64, RaplError> {
+// Read the MSR using the driver
+pub fn read_msr(msr: u64) -> Result<u64, RaplError> {
+    read_msr_wrapper(msr as u32)
+}
+
+// Read the MSR using the driver with a 32 bit MSR
+// __readmsr on Windows takes in an "int" as the MSR, which is 32 bits
+pub fn read_msr_wrapper(msr: u32) -> Result<u64, RaplError> {
+    /*
+    // TODO: Validate if this works correctly. Should be used instead
+    let driver_file = File::open("\\\\.\\WinRing0_1_2_0").unwrap();
+    let driver_handle = HANDLE(driver_file.as_raw_handle() as _);
+    */
+
     // Get the driver handle
     let rapl_driver = *RAPL_DRIVER.get().expect("RAPL driver not initialized");
 

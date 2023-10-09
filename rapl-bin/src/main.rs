@@ -1,13 +1,6 @@
 use anyhow::Result;
-
-#[cfg(target_os = "linux")]
-mod rapl_impl {
-    pub use rapl_lib::rapl::linux::{start_rapl_impl, stop_rapl_impl};
-}
-#[cfg(target_os = "windows")]
-mod rapl_impl {
-    pub use rapl_lib::rapl::windows::{start_rapl_impl, stop_rapl_impl};
-}
+use rapl_lib::rapl;
+use std::{thread, time::Duration};
 
 pub fn bench_test(n: i32) -> i32 {
     let mut val: i32 = 0;
@@ -22,13 +15,18 @@ fn main() -> Result<()> {
 
     //println!("Bench test: {}", bench_test(1000000000));
 
-    rapl_impl::start_rapl_impl();
+    rapl::start_rapl();
 
-    for i in 0..10 {
+    // Sleep for 1 second
+    thread::sleep(Duration::from_secs(1));
+
+    /*
+    for i in 0..200 {
         println!("test {}", i);
     }
+    */
 
-    rapl_impl::stop_rapl_impl();
+    rapl::stop_rapl();
 
     Ok(())
 }
