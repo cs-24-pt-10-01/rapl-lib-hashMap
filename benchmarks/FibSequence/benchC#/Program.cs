@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 // inspired from https://stackoverflow.com/questions/24374658/check-the-operating-system-at-compile-time 
 #if _LINUX
-    const string pathToLib = @"target/debug/librapl_lib.so";
+    const string pathToLib = @"target/release/librapl_lib.so";
 #elif _WINDOWS
-    const string pathToLib = @"target\debug\rapl_lib.dll";
+    const string pathToLib = @"target\release\rapl_lib.dll";
 #else
     const string pathToLib = "none";
 #endif

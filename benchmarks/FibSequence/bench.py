@@ -6,7 +6,7 @@ import platform
 
 fib_param = int(sys.argv[1])
 test_count =  int(sys.argv[2])
-lib_path = "target\\debug\\rapl_lib.dll" if platform.system() == "Windows" else "target/debug/librapl_lib.so"
+lib_path = "target\\release\\rapl_lib.dll" if platform.system() == "Windows" else "target/release/librapl_lib.so"
 
 # test method
 def fibIter(n):
