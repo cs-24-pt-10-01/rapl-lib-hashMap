@@ -19,13 +19,13 @@ mkdir results
 fibInput=20000
 count=1000
 
-#   Node
 echo "starting fib"
 
+
+#   Node
 node ./benchmarks/FibSequence/bench.js $fibInput $count
 sleep 5s
 append_to_latest_csv "NodeFib"
-
 
 #   Pypy
 pypy ./benchmarks/FibSequence/bench.py $fibInput $count
@@ -40,6 +40,12 @@ dotnet build ./benchmarks/FibSequence/benchC#  --configuration Release
 ./benchmarks/FibSequence/benchC#/bin/Debug/net7.0/Fib $fibInput $count
 sleep 5s
 append_to_latest_csv "CsharpFib" 
+
+#   Java
+java --enable-native-access=ALL-UNNAMED --enable-preview --source 21 ./benchmarks/FibSequence/fibjava/Bench.java $fibInput $count
+sleep 5s
+append_to_latest_csv "JavaFib"
+
 
 # starting services
 bash kill_and_burn.sh 1

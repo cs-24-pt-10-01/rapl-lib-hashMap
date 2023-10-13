@@ -9,5 +9,6 @@ All benchmarks are written to be called from the root of the repository (relativ
 - Python : iterative
 - Javascript (NodeJS) : iterative
 - C# (.NET 7) : iterative
+- Java : iterative
 
 Note: prints has been removed

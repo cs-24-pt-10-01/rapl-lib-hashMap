@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rapl_lib::rapl;
+use rapl_lib::ffi::{start_rapl, stop_rapl};
 use std::{thread, time::Duration};
 
 pub fn bench_test(n: i32) -> i32 {
@@ -15,7 +15,7 @@ fn main() -> Result<()> {
 
     //println!("Bench test: {}", bench_test(1000000000));
 
-    rapl::start_rapl();
+    start_rapl();
 
     // Sleep for 1 second
     thread::sleep(Duration::from_secs(1));
@@ -26,7 +26,7 @@ fn main() -> Result<()> {
     }
     */
 
-    rapl::stop_rapl();
+    stop_rapl();
 
     Ok(())
 }

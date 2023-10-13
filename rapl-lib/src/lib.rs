@@ -1,2 +1,2 @@
-mod ffi;
-pub mod rapl;
+pub mod ffi;
+mod rapl;

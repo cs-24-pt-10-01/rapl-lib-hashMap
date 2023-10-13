@@ -13,12 +13,6 @@ pub mod os_linux;
 #[cfg(target_os = "windows")]
 pub mod os_windows;
 
-// Import the MSR constants per CPU type
-#[cfg(amd)]
-use crate::rapl::amd::{MSR_RAPL_PKG_ENERGY_STAT, MSR_RAPL_POWER_UNIT};
-#[cfg(intel)]
-use crate::rapl::intel::{MSR_RAPL_PKG_ENERGY_STAT, MSR_RAPL_POWER_UNIT};
-
 // Import the OS specific functions
 #[cfg(target_os = "linux")]
 use self::os_linux::{read_msr, start_rapl_impl};
@@ -30,8 +24,6 @@ pub enum RaplError {
     #[cfg(target_os = "windows")]
     #[error("windows error")]
     Windows(#[from] windows::core::Error),
-    #[error("unknown RAPL error")]
-    Unknown,
 }
 
 #[cfg(amd)]
@@ -49,8 +41,14 @@ pub fn start_rapl() {
     start_rapl_impl();
 
     RAPL_INIT.call_once(|| {
+        // Import the MSR RAPL power unit constants per CPU type
+        #[cfg(amd)]
+        use crate::rapl::amd::MSR_RAPL_POWER_UNIT;
+        #[cfg(intel)]
+        use crate::rapl::intel::MSR_RAPL_POWER_UNIT;
+
         // Read power unit and store it in the power units global variable
-        let pwr_unit = read_rapl_power_unit().expect("failed to read RAPL power unit");
+        let pwr_unit = read_msr(MSR_RAPL_POWER_UNIT).expect("failed to read RAPL power unit");
         RAPL_POWER_UNITS.get_or_init(|| pwr_unit);
     });
 
@@ -87,22 +85,23 @@ pub fn stop_rapl() {
 #[cfg(amd)]
 pub fn stop_rapl() {
     // Read the RAPL end values
-    let (pkg_end, core_end) = read_rapl_registers();
+    let (core_end, pkg_end) = read_rapl_registers();
 
     // Load in the RAPL start value
-    let (pkg_start, core_start) = unsafe { RAPL_START };
+    let (core_start, pkg_start) = unsafe { RAPL_START };
 
     // Write the RAPL start and end values to the CSV
     write_to_csv(
-        (pkg_start, pkg_end, core_start, core_end),
-        ["PkgStart", "PkgEnd", "CoreStart", "CoreEnd"],
+        (core_start, core_end, pkg_start, pkg_end),
+        ["CoreStart", "CoreEnd", "PkgStart", "PkgEnd"],
     );
 }
 
-fn write_to_csv<T, C>(data: T, columns: C)
+fn write_to_csv<T, C, U>(data: T, columns: C)
 where
     T: Serialize,
-    C: IntoIterator<Item = &'static str>,
+    C: IntoIterator<Item = U>,
+    U: AsRef<[u8]>,
 {
     let wtr = match unsafe { CSV_WRITER.as_mut() } {
         Some(wtr) => wtr,
@@ -160,31 +159,25 @@ pub fn get_cpu_type() -> &'static str {
     }
 }
 
-pub fn read_rapl_power_unit() -> Result<u64, RaplError> {
-    read_msr(MSR_RAPL_POWER_UNIT)
-}
-
-pub fn read_rapl_pkg_energy_stat() -> Result<u64, RaplError> {
-    read_msr(MSR_RAPL_PKG_ENERGY_STAT)
-}
-
 #[cfg(amd)]
 fn read_rapl_registers() -> (u64, u64) {
-    use self::amd::AMD_MSR_CORE_ENERGY;
+    use self::amd::{AMD_MSR_CORE_ENERGY, MSR_RAPL_PKG_ENERGY_STAT};
 
-    let pkg = read_rapl_pkg_energy_stat().expect("failed to read pkg energy stat");
     let core = read_msr(AMD_MSR_CORE_ENERGY).unwrap();
+    let pkg = read_msr(MSR_RAPL_PKG_ENERGY_STAT).expect("failed to read RAPL_PKG_ENERGY_STAT");
 
-    (pkg, core)
+    (core, pkg)
 }
 
 #[cfg(intel)]
 fn read_rapl_registers() -> (u64, u64, u64, u64) {
-    use self::intel::{INTEL_MSR_RAPL_DRAM, INTEL_MSR_RAPL_PP0, INTEL_MSR_RAPL_PP1};
+    use self::intel::{
+        INTEL_MSR_RAPL_DRAM, INTEL_MSR_RAPL_PP0, INTEL_MSR_RAPL_PP1, MSR_RAPL_PKG_ENERGY_STAT,
+    };
 
     let pp0 = read_msr(INTEL_MSR_RAPL_PP0).expect("failed to read PP0");
     let pp1 = read_msr(INTEL_MSR_RAPL_PP1).expect("failed to read PP1");
-    let pkg = read_rapl_pkg_energy_stat().expect("failed to read PKG_ENERGY_STAT");
+    let pkg = read_msr(MSR_RAPL_PKG_ENERGY_STAT).expect("failed to read RAPL_PKG_ENERGY_STAT");
     let dram = read_msr(INTEL_MSR_RAPL_DRAM).expect("failed to read DRAM");
 
     (pp0, pp1, pkg, dram)

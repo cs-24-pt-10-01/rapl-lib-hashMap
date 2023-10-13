@@ -1,6 +1,10 @@
-# rapl-rust-test
+# rapl-interface
 
-The repository for RAPL testing.
+This is a library and executable project for reading the RAPL registers on Intel and AMD processors written in Rust.
+
+The supported operating systems are Linux and Windows.
+
+The repository also contains several benchmarks for testing the library.
 
 ## GitHub Actions
 
