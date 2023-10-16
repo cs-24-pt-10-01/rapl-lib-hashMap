@@ -41,7 +41,8 @@ pub fn start_rapl_impl() {
     // Initialize RAPL driver on first call
     RAPL_INIT.call_once(|| {
         // Check if running as admin due to the driver requirement
-        if !is_admin() {
+        let is_admin = is_admin().expect("failed to check if running as admin");
+        if is_admin {
             panic!("not running as admin, this is required for the RAPL driver to work");
         }
 
@@ -52,9 +53,9 @@ pub fn start_rapl_impl() {
 }
 
 // check if running as admin using the windows crate
-fn is_admin() -> bool {
+fn is_admin() -> Result<bool, RaplError> {
     let mut h_token = HANDLE::default();
-    unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut h_token as _) }.unwrap();
+    unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut h_token as _) }?;
 
     let mut token_elevation = TOKEN_ELEVATION { TokenIsElevated: 0 };
     let token_elevation_ptr = &mut token_elevation as *mut TOKEN_ELEVATION;
@@ -67,11 +68,10 @@ fn is_admin() -> bool {
             Some(token_elevation_ptr as _),
             cb_size,
             &mut cb_size as _,
-        )
-        .unwrap();
+        )?;
     }
 
-    token_elevation.TokenIsElevated != 0
+    Ok(token_elevation.TokenIsElevated != 0)
 }
 
 fn open_driver() -> Result<HANDLE, RaplError> {
