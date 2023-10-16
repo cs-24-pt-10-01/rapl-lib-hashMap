@@ -79,3 +79,10 @@ note: running the script from SSH requires the usage of tools like nohup:
 3. Call the benchmarking code (with administrative priviliges):
     - ``` python '.\benchmarks\fibonacci sequence\bench.py' ```
 4. The results can be found in "test.csv" in the root folder
+
+### Disabling raspberry or kill script
+The `runBench.sh` has two optional arguments, the first is for disabling the interaction with the raspberry pi the secound is for disabling the script that stops services while running the benchmarks.
+
+- Disable stopping services: `sh runBench.sh true false`
+- Disable Raspberry interaction: `sh runBench.sh false`
+- Disable both: `sh runBench false false`
