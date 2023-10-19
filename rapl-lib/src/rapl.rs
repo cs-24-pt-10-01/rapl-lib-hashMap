@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::{
     fs::{File, OpenOptions},
     sync::Once,
+    time::{SystemTime, UNIX_EPOCH},
 };
 use thiserror::Error;
 
@@ -29,10 +30,10 @@ pub enum RaplError {
 }
 
 #[cfg(amd)]
-static mut RAPL_START: (u64, u64) = (0, 0);
+static mut RAPL_START: (u128, (u64, u64)) = (0, (0, 0));
 
 #[cfg(intel)]
-static mut RAPL_START: (u64, u64, u64, u64) = (0, 0, 0, 0);
+static mut RAPL_START: (u128, (u64, u64, u64, u64)) = (0, (0, 0, 0, 0));
 
 static RAPL_INIT: Once = Once::new();
 static RAPL_POWER_UNITS: OnceCell<u64> = OnceCell::new();
@@ -54,8 +55,12 @@ pub fn start_rapl() {
         RAPL_POWER_UNITS.get_or_init(|| pwr_unit);
     });
 
+    // Get the current time in milliseconds since the UNIX epoch
+    let timestamp_start = get_timestamp_millis();
+
     // Safety: RAPL_START is only accessed in this function and only from a single thread
-    unsafe { RAPL_START = read_rapl_registers() };
+    let rapl_registers = read_rapl_registers();
+    unsafe { RAPL_START = (timestamp_start, rapl_registers) };
 }
 
 #[cfg(intel)]
@@ -63,15 +68,29 @@ pub fn stop_rapl() {
     // Read the RAPL end values
     let (pp0_end, pp1_end, pkg_end, dram_end) = read_rapl_registers();
 
+    // Get the current time in milliseconds since the UNIX epoch
+    let timestamp_end = get_timestamp_millis();
+
     // Load in the RAPL start value
-    let (pp0_start, pp1_start, pkg_start, dram_start) = unsafe { RAPL_START };
+    let (timestamp_start, (pp0_start, pp1_start, pkg_start, dram_start)) = unsafe { RAPL_START };
 
     // Write the RAPL start and end values to the CSV
     write_to_csv(
         (
-            pp0_start, pp0_end, pp1_start, pp1_end, pkg_start, pkg_end, dram_start, dram_end,
+            timestamp_start,
+            timestamp_end,
+            pp0_start,
+            pp0_end,
+            pp1_start,
+            pp1_end,
+            pkg_start,
+            pkg_end,
+            dram_start,
+            dram_end,
         ),
         [
+            "TimeStart",
+            "TimeEnd",
             "PP0Start",
             "PP0End",
             "PP1Start",
@@ -90,15 +109,40 @@ pub fn stop_rapl() {
     // Read the RAPL end values
     let (core_end, pkg_end) = read_rapl_registers();
 
+    // Get the current time in milliseconds since the UNIX epoch
+    let timestamp_end = get_timestamp_millis();
+
     // Load in the RAPL start value
-    let (core_start, pkg_start) = unsafe { RAPL_START };
+    let (timestamp_start, (core_start, pkg_start)) = unsafe { RAPL_START };
 
     // Write the RAPL start and end values to the CSV
     write_to_csv(
-        (core_start, core_end, pkg_start, pkg_end),
-        ["CoreStart", "CoreEnd", "PkgStart", "PkgEnd"],
+        (
+            timestamp_start,
+            timestamp_end,
+            core_start,
+            core_end,
+            pkg_start,
+            pkg_end,
+        ),
+        [
+            "TimeStart",
+            "TimeEnd",
+            "CoreStart",
+            "CoreEnd",
+            "PkgStart",
+            "PkgEnd",
+        ],
     )
     .expect("failed to write to CSV");
+}
+
+fn get_timestamp_millis() -> u128 {
+    let current_time = SystemTime::now();
+    let duration_since_epoch = current_time
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    duration_since_epoch.as_millis()
 }
 
 fn write_to_csv<T, C, U>(data: T, columns: C) -> Result<(), std::io::Error>
@@ -136,16 +180,6 @@ where
     // Write the data to the CSV and flush it
     wtr.serialize(data)?;
     wtr.flush()?;
-
-    /*
-    // TODO: Revise if we can use timestamps in the CSV writing
-
-    let current_time = SystemTime::now();
-    let duration_since_epoch = current_time
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    let timestamp = duration_since_epoch.as_millis();
-    */
 
     Ok(())
 }
