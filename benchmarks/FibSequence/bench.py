@@ -18,17 +18,19 @@ def fibIter(n):
         fibPrev, fib = fib, fib + fibPrev
     return fib
 
-# start lib
+# load lib
 dll = cdll.LoadLibrary(lib_path)
 
+# running benchmark
 for i in range(test_count):
     # start recording
     dll.start_rapl()
 
     # run test
-    fibIter(fib_param)
+    result = fibIter(fib_param)
 
     # stop recording
     dll.stop_rapl()
+    print(result)
 
-print("job done")
+print("py job done")

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Numerics;
 
 // inspired from https://stackoverflow.com/questions/24374658/check-the-operating-system-at-compile-time 
 #if _LINUX
@@ -37,13 +38,30 @@ static ulong Fib(uint x)
     return next;
 }
 
-//testing
+// Modified test method that uses big integers
+static BigInteger FibBig(uint x)
+{
+    if (x == 0) return 0;
+
+    BigInteger prev = new BigInteger(0);
+    BigInteger next = new BigInteger(1);
+    for (uint i = 1; i < x; i++)
+    {
+        BigInteger sum = prev + next;
+        prev = next;
+        next = sum;
+    }
+    return next;
+}
+
+// running benchmark
 for (int i = 0; i < count; i++)
 {
     start_rapl();
 
-    Fib(fibVal);
+    var result = FibBig(fibVal);
 
     stop_rapl();
+    Console.WriteLine(result.ToString());
 }
-Console.WriteLine("job done");
+Console.WriteLine("C# job done");

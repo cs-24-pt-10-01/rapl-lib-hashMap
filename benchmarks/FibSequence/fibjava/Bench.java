@@ -1,14 +1,7 @@
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 
-// OLD:
-// java --enable-native-access=ALL-UNNAMED --enable-preview --source 21 .\benchmarks\fibjava\Bench.java 10 10
-
-// Testing with Java library path:
-// java -Djava.library.path=./target/release --enable-native-access=ALL-UNNAMED --enable-preview --source 21 ./benchmarks/FibSequence/fibjava/Bench.java 10 10
-
-// Latest working version:
-// java --enable-native-access=ALL-UNNAMED --enable-preview --source 21 ./benchmarks/FibSequence/fibjava/Bench.java 10 10
+import java.math.BigInteger;
 
 class Bench {
     public static void main(String[] args) {
@@ -43,17 +36,6 @@ class Bench {
         int n = Integer.parseInt(args[0]);
         int loop_count = Integer.parseInt(args[1]);
 
-        /*
-        // works without arena as seen below, but not sure if it is correct to do so
-        // the code is commented out here in case it is needed later
-
-        try (Arena arena = Arena.ofConfined()) {
-            start_rapl.invoke();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        */
-
         // Running benchmark
         // Note that this could potentially be optimized away
         // by the compiler due to the fact that the result is not used.
@@ -64,22 +46,16 @@ class Bench {
                 e.printStackTrace();
             }
 
-            long result = itFibN(n);
+            BigInteger result = itFibBig(n);
 
             try {
                 stop_rapl.invoke();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
+            System.out.println(result.toString());
         }
-
-        /*
-        try (Arena arena = Arena.ofConfined()) {
-            stop_rapl.invoke();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        */
+        System.out.println("Java job done");
     }
 
     // Test method
@@ -93,6 +69,23 @@ class Bench {
         for(n--; n > 0; n--)
         {
             ans = n1 + n2;
+            n1 = n2;
+            n2 = ans;
+        }
+        return ans;
+    }
+
+    // Modified version of the itFibN method that uses BigInteger
+    public static BigInteger itFibBig(int n)
+    {
+        if (n < 2)
+        return new BigInteger(n + "");
+        BigInteger ans = new BigInteger("0");
+        BigInteger n1 = new BigInteger("0");
+        BigInteger n2 = new BigInteger("1");
+        for(n--; n > 0; n--)
+        {
+            ans = n1.add(n2);
             n1 = n2;
             n2 = ans;
         }
