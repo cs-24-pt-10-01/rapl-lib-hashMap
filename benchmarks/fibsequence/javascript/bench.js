@@ -37,5 +37,3 @@ for (let i = 0; i < runCount; i++){
     stop();
     console.log(result);
 }
-
-console.log("js job done");  

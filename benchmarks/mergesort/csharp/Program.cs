@@ -46,7 +46,6 @@ for (int i = 0; i < count; i++)
     }
     Console.WriteLine(" ");
 }
-Console.WriteLine("C# job done");
 
 // test class (the implementation on rosetta was a class)
 public class MergeSort<T> where T : IComparable {

@@ -57,5 +57,3 @@ for (let i = 0; i < runCount; i++){
     stop();
     console.log(tobeSorted);
 }
-
-console.log("js job done");  

@@ -13,7 +13,5 @@ int main(int argc, char *argv[]) {
         stop_rapl();
     }
 
-    std::cout << "Cpp job done" << std::endl;
-
     return 0;
 }

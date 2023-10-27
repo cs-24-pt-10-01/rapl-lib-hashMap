@@ -186,5 +186,3 @@ for (let i = 0; i < runCount; i++){
 
     stop();
 }
-
-console.log("js job done");  

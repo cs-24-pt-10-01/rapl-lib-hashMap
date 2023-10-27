@@ -61,7 +61,6 @@ class Bench {
 
             System.out.println(sorted.toString());
         }
-        System.out.println("Java job done");
 
     }
 

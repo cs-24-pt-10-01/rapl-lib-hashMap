@@ -219,8 +219,6 @@ int main(int argc, char *argv[]) { // Modified to work with RAPL and with out be
 
         stop_rapl();
 
-        printf("job done\n");
-
     }
 
     

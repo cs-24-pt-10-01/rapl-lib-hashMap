@@ -41,7 +41,6 @@ for (int i = 0; i < count; i++)
 	stop_rapl();
 
 }
-Console.WriteLine("job done");
 
 
 

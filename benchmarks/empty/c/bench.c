@@ -12,7 +12,5 @@ int main(int argc, char *argv[]) {
         stop_rapl();
     }
 
-    printf("C job done\n");
-
     return 0;
 }

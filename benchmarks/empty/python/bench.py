@@ -11,5 +11,3 @@ dll = cdll.LoadLibrary(lib_path)
 for i in range(test_count):
     dll.start_rapl()
     dll.stop_rapl()
-
-print("Python job done")

@@ -261,6 +261,5 @@ int main(int argc, char* argv[]) {
 
         
     }
-    std::cout << "job done" << std::endl;
 }
 
