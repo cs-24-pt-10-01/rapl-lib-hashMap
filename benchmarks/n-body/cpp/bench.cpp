@@ -245,8 +245,8 @@ struct NBodySystem {
 
 
 int main(int argc, char* argv[]) {
-    int n = std::atoi(argv[1]);
-    int count = std::atoi(argv[2]);
+    int count = std::atoi(argv[1]);
+    int n = std::atoi(argv[2]);
 
 
     for(int i=0; i < count; i++){

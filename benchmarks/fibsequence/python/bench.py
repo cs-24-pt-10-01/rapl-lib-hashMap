@@ -4,9 +4,10 @@ from ctypes import *
 import sys
 import platform
 
-fib_param = int(sys.argv[1])
-test_count =  int(sys.argv[2])
-lib_path = "target\\release\\rapl_lib.dll" if platform.system() == "Windows" else "target/release/librapl_lib.so"
+test_count = int(sys.argv[1])
+fib_param = int(sys.argv[2])
+lib_path = "target\\release\\rapl_lib.dll" if platform.system(
+) == "Windows" else "target/release/librapl_lib.so"
 
 # test method
 def fibRec(n):
@@ -14,6 +15,7 @@ def fibRec(n):
         return n
     else:
         return fibRec(n-1) + fibRec(n-2)
+
 
 # load lib
 dll = cdll.LoadLibrary(lib_path)

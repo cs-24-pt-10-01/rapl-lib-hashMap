@@ -30,8 +30,8 @@ class Bench {
                 FunctionDescriptor.of(ValueLayout.JAVA_INT));
 
 
-        int n = Integer.parseInt(args[0]);
-        int loop_count = Integer.parseInt(args[1]);
+        int loop_count = Integer.parseInt(args[0]);
+        int n = Integer.parseInt(args[1]);
 
         // Running benchmark
         for (int i = 0; i < loop_count; i++) {

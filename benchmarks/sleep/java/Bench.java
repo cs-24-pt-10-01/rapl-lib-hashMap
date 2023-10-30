@@ -1,13 +1,21 @@
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 
+// OLD:
+// java --enable-native-access=ALL-UNNAMED --enable-preview --source 21 .\benchmarks\empty\java\Bench.java 10
+
+// Testing with Java library path:
+// java -Djava.library.path=./target/release --enable-native-access=ALL-UNNAMED --enable-preview --source 21 ./benchmarks\empty\java\Bench.java 10
+
+// Latest working version:
+// java --enable-native-access=ALL-UNNAMED --enable-preview --source 21 ./benchmarks/empty/java/Bench.java 10
+
 class Bench {
     public static void main(String[] args) {
-
-        // Finding os
+        // Find os
         var os = System.getProperty("os.name");
 
-        // Finding the path of library (and loading it)
+        // Find the path of the library (and load it)
         var dll_path = System.getProperty("user.dir") + "/target/release/";
         if (os.equals("Linux")) {
             dll_path = dll_path + "librapl_lib.so";
@@ -20,7 +28,7 @@ class Bench {
 
         System.load(dll_path);
 
-        // Loading functions
+        // Load functions
         MemorySegment start_rapl_symbol = SymbolLookup.loaderLookup().find("start_rapl").get();
         MethodHandle start_rapl = Linker.nativeLinker().downcallHandle(start_rapl_symbol,
                     FunctionDescriptor.of(ValueLayout.JAVA_INT));
@@ -29,10 +37,20 @@ class Bench {
         MethodHandle stop_rapl = Linker.nativeLinker().downcallHandle(stop_rapl_symbol,
                     FunctionDescriptor.of(ValueLayout.JAVA_INT));
 
-        
-        // Getting arguments
+        // Get arguments
         int loop_count = Integer.parseInt(args[0]);
-        int n = Integer.parseInt(args[1]);
+        int sleep_time = Integer.parseInt(args[1]);
+
+        /*
+        // works without arena as seen below, but not sure if it is correct to do so
+        // the code is commented out here in case it is needed later
+
+        try (Arena arena = Arena.ofConfined()) {
+            start_rapl.invoke();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        */
 
         // Running benchmark
         // Note that this could potentially be optimized away
@@ -44,24 +62,25 @@ class Bench {
                 e.printStackTrace();
             }
 
-            long result = recFibN(n);
+            try {
+                Thread.sleep(sleep_time*1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             try {
                 stop_rapl.invoke();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-            
-            // stopping compiler optimization
-            if (result < 42){
-                System.out.println(result);
-            }
         }
-    }
 
-    // test method
-    public static long recFibN(final int n)
-    {
-        return (n < 2) ? n : recFibN(n - 1) + recFibN(n - 2);
+        /*
+        try (Arena arena = Arena.ofConfined()) {
+            stop_rapl.invoke();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        */
     }
 }

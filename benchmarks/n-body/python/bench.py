@@ -2,11 +2,10 @@ from ctypes import *
 import sys
 import platform
 
-N_Count = int(sys.argv[1])
-test_count =  int(sys.argv[2])
-lib_path = "target\\release\\rapl_lib.dll" if platform.system() == "Windows" else "target/release/librapl_lib.so"
-
-
+test_count = int(sys.argv[1])
+N_Count = int(sys.argv[2])
+lib_path = "target\\release\\rapl_lib.dll" if platform.system(
+) == "Windows" else "target/release/librapl_lib.so"
 
 
 ######################################################################################
@@ -18,15 +17,15 @@ lib_path = "target\\release\\rapl_lib.dll" if platform.system() == "Windows" els
 # modified by Maciej Fijalkowski
 # 2to3
 
-import sys 
 
 def combinations(l):
     result = []
     for x in range(len(l) - 1):
         ls = l[x+1:]
         for y in ls:
-            result.append((l[x],y))
+            result.append((l[x], y))
     return result
+
 
 PI = 3.14159265358979323
 SOLAR_MASS = 4 * PI * PI
@@ -65,7 +64,7 @@ BODIES = {
                 [2.68067772490389322e-03 * DAYS_PER_YEAR,
                  1.62824170038242295e-03 * DAYS_PER_YEAR,
                  -9.51592254519715870e-05 * DAYS_PER_YEAR],
-                5.15138902046611451e-05 * SOLAR_MASS) }
+                5.15138902046611451e-05 * SOLAR_MASS)}
 
 
 SYSTEM = list(BODIES.values())
@@ -107,6 +106,7 @@ def report_energy(bodies=SYSTEM, pairs=PAIRS, e=0.0):
         e += m * (vx * vx + vy * vy + vz * vz) / 2.
     print("%.9f" % e)
 
+
 def offset_momentum(ref, bodies=SYSTEM, px=0.0, py=0.0, pz=0.0):
 
     for (r, [vx, vy, vz], m) in bodies:
@@ -118,11 +118,12 @@ def offset_momentum(ref, bodies=SYSTEM, px=0.0, py=0.0, pz=0.0):
     v[1] = py / m
     v[2] = pz / m
 
+
 def N_Body(n, ref='sun'):
     offset_momentum(BODIES[ref])
-    #report_energy()
+    # report_energy()
     advance(0.01, n)
-    #report_energy()
+    # report_energy()
 ######################################################################################
 
 

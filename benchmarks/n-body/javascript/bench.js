@@ -1,10 +1,10 @@
 const os = require("os");
 
-let N_Count = process.argv[2];
-const runCount = process.argv[3];
-const libPath = os.platform() == "win32"?
-  "target\\release\\rapl_lib.dll":
-  "target/release/librapl_lib.so"
+const runCount = process.argv[2];
+let N_Count = process.argv[3];
+const libPath = os.platform() == "win32" ?
+    "target\\release\\rapl_lib.dll" :
+    "target/release/librapl_lib.so"
 
 // test method
 function N_Body(n) {
@@ -147,8 +147,8 @@ function N_Body(n) {
         for (let i = 0; i < size; i++) {
             const bodyi = bodies[i];
 
-            e += 0.5 * bodyi.mass * ( bodyi.vx * bodyi.vx + 
-                bodyi.vy * bodyi.vy + bodyi.vz * bodyi.vz );
+            e += 0.5 * bodyi.mass * (bodyi.vx * bodyi.vx +
+                bodyi.vy * bodyi.vy + bodyi.vz * bodyi.vz);
 
             for (let j = i + 1; j < size; j++) {
                 const bodyj = bodies[j];
@@ -179,7 +179,7 @@ const start = lib.func('int start_rapl()');
 const stop = lib.func('void stop_rapl()');
 
 
-for (let i = 0; i < runCount; i++){
+for (let i = 0; i < runCount; i++) {
     start();
 
     N_Body(N_Count);

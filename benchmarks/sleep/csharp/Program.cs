@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Numerics;
 
 // inspired from https://stackoverflow.com/questions/24374658/check-the-operating-system-at-compile-time 
 #if _LINUX
@@ -13,29 +12,17 @@ using System.Numerics;
 
 string[] arguments = Environment.GetCommandLineArgs();
 uint count = uint.Parse(arguments[1]);
-uint fibVal = uint.Parse(arguments[2]);
+int sleepTime = int.Parse(arguments[2]);
 
-// DLL imports
 [DllImport(pathToLib)]
 static extern int start_rapl();
 
 [DllImport(pathToLib)]
 static extern void stop_rapl();
 
-// test method
-static ulong Fib(uint n) {
-    return (n < 2)? n : Fib(n - 1) + Fib(n - 2);
-}
-
-// running benchmark
 for (int i = 0; i < count; i++)
 {
     start_rapl();
-
-    var result = Fib(fibVal);
-
+    System.Threading.Thread.Sleep(sleepTime*1000);
     stop_rapl();
-    if (result < 42){
-        Console.WriteLine(result.ToString());
-    }
 }

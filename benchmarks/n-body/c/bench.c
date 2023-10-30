@@ -145,8 +145,8 @@ static void advance(int n, double dt, double *m, __m256d *p, __m256d *v) {
 }
 
 int main(int argc, char *argv[]) { // Modified to work with RAPL and with out benchmarks
-    int n = atoi(argv[1]);
-    int count = atoi(argv[2]);
+    int count = atoi(argv[1]);
+    int n = atoi(argv[2]);
 
     for(int i = 0; i<count; i++){
 

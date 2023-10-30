@@ -16,8 +16,8 @@ const string pathToLib = "none";
 #endif
 
 string[] arguments = Environment.GetCommandLineArgs();
-int N_Count = int.Parse(arguments[1]);
-uint count = uint.Parse(arguments[2]);
+uint count = uint.Parse(arguments[1]);
+int N_Count = int.Parse(arguments[2]);
 
 
 // DLL imports

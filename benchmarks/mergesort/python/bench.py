@@ -7,14 +7,17 @@ import platform
 # used in test method
 from heapq import merge
 
-merge_param = sys.argv[1]
+merge_param = sys.argv[2]
 # formatting merge_param into a list of integers
 merge_param = merge_param.replace("[", "").replace("]", "").split(",")
 merge_param = [int(i) for i in merge_param]
-test_count =  int(sys.argv[2])
-lib_path = "target\\release\\rapl_lib.dll" if platform.system() == "Windows" else "target/release/librapl_lib.so"
+test_count = int(sys.argv[1])
+lib_path = "target\\release\\rapl_lib.dll" if platform.system(
+) == "Windows" else "target/release/librapl_lib.so"
 
 # test method
+
+
 def merge_sort(m):
     if len(m) <= 1:
         return m
@@ -26,6 +29,7 @@ def merge_sort(m):
     left = merge_sort(left)
     right = merge_sort(right)
     return list(merge(left, right))
+
 
 # load lib
 dll = cdll.LoadLibrary(lib_path)

@@ -13,10 +13,10 @@ using System.Text.Json;
 #endif
 
 string[] arguments = Environment.GetCommandLineArgs();
-uint count = uint.Parse(arguments[2]);
+uint count = uint.Parse(arguments[1]);
 
 // converting argument as it was a json array
-List<uint> data = JsonSerializer.Deserialize<List<uint>>(arguments[1]);
+List<uint> data = JsonSerializer.Deserialize<List<uint>>(arguments[2]);
 // converting list to array
 uint[] mergeParam = data.ToArray();
 
