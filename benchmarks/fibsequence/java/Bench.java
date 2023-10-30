@@ -1,8 +1,6 @@
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 
-import java.math.BigInteger;
-
 class Bench {
     public static void main(String[] args) {
 
@@ -46,48 +44,24 @@ class Bench {
                 e.printStackTrace();
             }
 
-            BigInteger result = itFibBig(n);
+            long result = recFibN(n);
 
             try {
                 stop_rapl.invoke();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-            System.out.println(result.toString());
+            
+            // stopping compiler optimization
+            if (result < 42){
+                System.out.println(result);
+            }
         }
     }
 
-    // Test method
-    public static long itFibN(int n)
+    // test method
+    public static long recFibN(final int n)
     {
-        if (n < 2)
-        return n;
-        long ans = 0;
-        long n1 = 0;
-        long n2 = 1;
-        for(n--; n > 0; n--)
-        {
-            ans = n1 + n2;
-            n1 = n2;
-            n2 = ans;
-        }
-        return ans;
-    }
-
-    // Modified version of the itFibN method that uses BigInteger
-    public static BigInteger itFibBig(int n)
-    {
-        if (n < 2)
-        return new BigInteger(n + "");
-        BigInteger ans = new BigInteger("0");
-        BigInteger n1 = new BigInteger("0");
-        BigInteger n2 = new BigInteger("1");
-        for(n--; n > 0; n--)
-        {
-            ans = n1.add(n2);
-            n1 = n2;
-            n2 = ans;
-        }
-        return ans;
+        return (n < 2) ? n : recFibN(n - 1) + recFibN(n - 2);
     }
 }

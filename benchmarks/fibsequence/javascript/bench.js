@@ -11,14 +11,8 @@ const libPath = os.platform() == "win32"?
 
 // test method
 function fib(n) {
-    var a = 0, b = 1, t;
-    while (n-- > 0) {
-      t = a;
-      a = b;
-      b += t;
-    }
-    return a;
-  }
+  return n<2?n:fib(n-1)+fib(n-2);
+}
 
 // loading library
 const koffi = require('koffi');
@@ -35,5 +29,7 @@ for (let i = 0; i < runCount; i++){
     let result = fib(fibParam);
 
     stop();
-    console.log(result);
+    if (result < 42){
+        console.log(result);
+    }
 }

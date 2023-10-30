@@ -46,4 +46,20 @@ bash utils/append_to_latest_csv.sh "Java$testName"
 echo --- Java Done ---
 echo
 
+#   C
+echo --- Starting C ---
+gcc benchmarks/MergeSort/c/bench.c -O3 -o benchmarks/MergeSort/c/bench -L./target/release -lrapl_lib -Wl,-rpath=./target/release && ./benchmarks/MergeSort/c/bench $count $mergeInput
+sleep 5s
+bash utils/append_to_latest_csv.sh "C$testName"
+echo --- C Done ---
+echo
+
+#   C++
+echo --- Starting C++ ---
+g++ benchmarks/MergeSort/cpp/bench.cpp -O3 -o benchmarks/MergeSort/cpp/bench -L./target/release -lrapl_lib -Wl,-rpath=./target/release && ./benchmarks/MergeSort/cpp/bench $count $mergeInput
+sleep 5s
+bash utils/append_to_latest_csv.sh "Cpp$testName"
+echo --- C++ Done ---
+echo
+
 echo "!!! Finished $testName !!!"

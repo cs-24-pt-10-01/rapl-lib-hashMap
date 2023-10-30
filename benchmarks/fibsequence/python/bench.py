@@ -9,14 +9,11 @@ test_count =  int(sys.argv[2])
 lib_path = "target\\release\\rapl_lib.dll" if platform.system() == "Windows" else "target/release/librapl_lib.so"
 
 # test method
-def fibIter(n):
+def fibRec(n):
     if n < 2:
         return n
-    fibPrev = 1
-    fib = 1
-    for _ in range(2, n):
-        fibPrev, fib = fib, fib + fibPrev
-    return fib
+    else:
+        return fibRec(n-1) + fibRec(n-2)
 
 # load lib
 dll = cdll.LoadLibrary(lib_path)
@@ -27,8 +24,10 @@ for i in range(test_count):
     dll.start_rapl()
 
     # run test
-    result = fibIter(fib_param)
+    result = fibRec(fib_param)
 
     # stop recording
     dll.stop_rapl()
-    print(result)
+    
+    if result < 42:
+        print(result)

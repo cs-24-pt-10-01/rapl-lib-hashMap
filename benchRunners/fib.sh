@@ -1,4 +1,4 @@
-fibInput=200000
+fibInput=20
 count=1000
 testName="fib"
 folder="fibsequence"
@@ -32,7 +32,7 @@ echo
 
 #   C#
 echo --- Starting C# ---
-dotnet run --project ./benchmarks/$folder/csharp/Fib.csproj --configuration Release $fibInput $count
+dotnet run --project ./benchmarks/$folder/csharp/Fib.csproj --configuration Release $count $fibInput
 sleep 5s
 bash utils/append_to_latest_csv.sh "Csharp$testName"
 echo --- C# Done ---
@@ -44,6 +44,22 @@ java --enable-native-access=ALL-UNNAMED --enable-preview --source 21 ./benchmark
 sleep 5s
 bash utils/append_to_latest_csv.sh "Java$testName"
 echo --- Java Done ---
+echo
+
+#   C
+echo --- Starting C ---
+gcc benchmarks/$folder/c/bench.c -O3 -o benchmarks/$folder/c/bench -L./target/release -lrapl_lib -Wl,-rpath=./target/release && ./benchmarks/$folder/c/bench $count $mergeInput
+sleep 5s
+bash utils/append_to_latest_csv.sh "C$testName"
+echo --- C Done ---
+echo
+
+#   C++
+echo --- Starting C++ ---
+g++ benchmarks/$folder/cpp/bench.cpp -O3 -o benchmarks/$folder/cpp/bench -L./target/release -lrapl_lib -Wl,-rpath=./target/release && ./benchmarks/$folder/cpp/bench $count $mergeInput
+sleep 5s
+bash utils/append_to_latest_csv.sh "Cpp$testName"
+echo --- C++ Done ---
 echo
 
 echo "!!! Finished $testName !!!"

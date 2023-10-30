@@ -23,35 +23,8 @@ static extern int start_rapl();
 static extern void stop_rapl();
 
 // test method
-static ulong Fib(uint x)
-{
-    if (x == 0) return 0;
-
-    ulong prev = 0;
-    ulong next = 1;
-    for (int i = 1; i < x; i++)
-    {
-        ulong sum = prev + next;
-        prev = next;
-        next = sum;
-    }
-    return next;
-}
-
-// Modified test method that uses big integers
-static BigInteger FibBig(uint x)
-{
-    if (x == 0) return 0;
-
-    BigInteger prev = new BigInteger(0);
-    BigInteger next = new BigInteger(1);
-    for (uint i = 1; i < x; i++)
-    {
-        BigInteger sum = prev + next;
-        prev = next;
-        next = sum;
-    }
-    return next;
+static ulong Fib(uint n) {
+    return (n < 2)? n : Fib(n - 1) + Fib(n - 2);
 }
 
 // running benchmark
@@ -59,8 +32,10 @@ for (int i = 0; i < count; i++)
 {
     start_rapl();
 
-    var result = FibBig(fibVal);
+    var result = Fib(fibVal);
 
     stop_rapl();
-    Console.WriteLine(result.ToString());
+    if (result < 42){
+        Console.WriteLine(result.ToString());
+    }
 }
