@@ -12,7 +12,7 @@ const libPath = os.platform() == "win32" ?
     "target\\release\\rapl_lib.dll" :
     "target/release/librapl_lib.so"
 
-// test method
+// test method from Rosetta Code
 function mergeSortInPlaceFast(v) {
     sort(v, 0, v.length, v.slice());
 
@@ -49,14 +49,14 @@ const stop = lib.func('void stop_rapl()');
 // running benchmark
 for (let i = 0; i < runCount; i++) {
 
-    let tobeSorted = Array.from(mergeParam);
+    let toBeSorted = Array.from(mergeParam);
     start();
 
-    mergeSortInPlaceFast(tobeSorted);
+    mergeSortInPlaceFast(toBeSorted);
 
     stop();
 
-    if (tobeSorted.length < 42){
-        console.log(tobeSorted.length);
+    if (toBeSorted.length < 42){
+        console.log(toBeSorted);
     }
 }

@@ -63,8 +63,9 @@ class Bench {
             }
         }
     }
-
-    // Test class (implementation was a class in rosetta)
+    
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // Rosetta code
     public class Merge{
         public static <E extends Comparable<? super E>> List<E> mergeSort(List<E> m){
             if(m.size() <= 1) return m;

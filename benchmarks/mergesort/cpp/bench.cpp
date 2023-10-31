@@ -7,11 +7,14 @@ extern "C" {
 }
 
 #include <iterator>
-#include <algorithm> // for std::inplace_merge
-#include <functional> // for std::less
+#include <algorithm>
+#include <functional> 
 #include <string>
 #include <vector>
 
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// Rosetta code start
 template<typename RandomAccessIterator, typename Order>
  void mergesort(RandomAccessIterator first, RandomAccessIterator last, Order order)
 {
@@ -44,6 +47,9 @@ vector<int> IntVectorFromString(std::string str){
     result.push_back(std::atoi(str.c_str()));
     return result;
 }
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// Rosetta code stop
 
 int main(int argc, char *argv[]) {
 

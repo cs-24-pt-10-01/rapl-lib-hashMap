@@ -15,9 +15,7 @@ test_count = int(sys.argv[1])
 lib_path = "target\\release\\rapl_lib.dll" if platform.system(
 ) == "Windows" else "target/release/librapl_lib.so"
 
-# test method
-
-
+# test method from Rosetta Code
 def merge_sort(m):
     if len(m) <= 1:
         return m
