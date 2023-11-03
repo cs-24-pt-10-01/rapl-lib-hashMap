@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         stop_rapl();
 
         // stopping compiler optimization
-        if (sizeof(sortParamCopy) < 42){
+        if (sortParamCopy[sortParamLen - 1] < 42){
             printf("%d\n", sortParamCopy[0]);
         }
 

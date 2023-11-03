@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
         stop_rapl();
 
         // stopping compiler optimization
-        if (sizeof(mergeParamCopy) < 42){
+        if (mergeParamCopy[mergeParamLen - 1] < 42){
             printf("%d\n", mergeParamCopy[0]);
         }
 
