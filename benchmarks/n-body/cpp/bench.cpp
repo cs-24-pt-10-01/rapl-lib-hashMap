@@ -253,9 +253,21 @@ int main(int argc, char* argv[]) {
         start_rapl();
 
         NBodySystem bodies(0.01);
-        //std::cout << bodies.energy() << std::endl;
+
+        double energy1 = bodies.energy();
+        if (energy1 > 10) //should always be false, but it stops the compiler from removing it
+        {
+            std::cout << energy1 << std::endl;
+        }
+        
         for (int i = 0; i < n; ++i) bodies.advance();
-        //std::cout << bodies.energy() << std::endl;
+
+        double energy2 = bodies.energy();
+        if (energy2 > 10) //should always be false, but it stops the compiler from removing it
+        {
+            std::cout << energy2 << std::endl;
+        }
+
 
         stop_rapl();
 

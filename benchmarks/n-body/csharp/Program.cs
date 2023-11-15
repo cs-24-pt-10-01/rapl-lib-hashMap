@@ -5,6 +5,7 @@ using System.Runtime.Intrinsics;
 
 using static System.Runtime.CompilerServices.MethodImplOptions;
 using V256d = System.Runtime.Intrinsics.Vector256<double>;
+using System;
 
 // inspired from https://stackoverflow.com/questions/24374658/check-the-operating-system-at-compile-time 
 #if _LINUX
@@ -206,6 +207,7 @@ public static unsafe class Net60_NBody_AVX_9_3b
 		}
 	}
 
+	// Modified
 	[SkipLocalsInit]
 	public static void RUN(int iterations)
 	{
@@ -218,12 +220,19 @@ public static unsafe class Net60_NBody_AVX_9_3b
 
 		InitSystem(mem, out V256d* m, out V256d* p, out V256d* v);
 
-		//Console.WriteLine(Energy((double*)mem, p, v).ToString("F9"));
+		double energy1 = Energy((double*)mem, p, v);
+		if (energy1 > 10) //Should always be false, but it stops the compiler from removing it
+		{
+			Console.WriteLine(energy1.ToString("F9"));
+		}
 
 		Advance(iterations, 0.01, m, p, v);
 
-		//Console.WriteLine(Energy((double*)mem, p, v).ToString("F9"));
-
+		double energy2 = Energy((double*)mem, p, v);
+		if (energy2 > 10) //Should always be false, but it stops the compiler from removing it
+		{
+			Console.WriteLine(energy2.ToString("F9"));
+		}
 
 		[SkipLocalsInit]
 		static void InitSystem(V256d* mem, out V256d* m, out V256d* p, out V256d* v)

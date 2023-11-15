@@ -165,11 +165,20 @@ function N_Body(n) {
 
     offsetMomentum();
 
-    //console.log(energy().toFixed(9));
+
+    let energy1 = energy();
+    if(energy1 > 10){ //should always be false. Used stop the compiler from optimizing it away
+        console.log(energy1.toFixed(9));
+    }
+
     for (let i = 0; i < n; i++) {
         advance(0.01);
     }
-    //console.log(energy().toFixed(9));
+    
+    let energy2 = energy();
+    if(energy2 > 10){ //should always be false. Used stop the compiler from optimizing it away
+        console.log(energy2.toFixed(9));
+    }
 }
 
 const koffi = require('koffi');

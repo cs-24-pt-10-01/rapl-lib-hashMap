@@ -213,12 +213,26 @@ int main(int argc, char *argv[]) { // Modified to work with RAPL and with out be
         v[0] = _mm256_mul_pd(o, _mm256_set1_pd(-1.0 / SOLAR_MASS));
 
 
-        //printf("%.9f\n", energy(m, p, v));
+        //
+        // The following has been changed
+        //
+
+        double energy1 = energy(m, p, v);
+        if (energy1 > 10) // This should always be false, but it stops the compiler from removing it
+        {
+            printf("%.9f\n", energy1);
+        }
+        
+
         advance(n, 0.01, m, p, v);
-        //printf("%.9f\n", energy(m, p, v));
+
+        double energy2 = energy(m, p, v);
+        if (energy2 > 10) // This should always be false, but it stops the compiler from removing it
+        {
+            printf("%.9f\n", energy2);
+        }
 
         stop_rapl();
-
     }
 
     

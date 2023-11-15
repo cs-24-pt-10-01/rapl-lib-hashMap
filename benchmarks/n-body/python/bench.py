@@ -104,7 +104,9 @@ def report_energy(bodies=SYSTEM, pairs=PAIRS, e=0.0):
         e -= (m1 * m2) / ((dx * dx + dy * dy + dz * dz) ** 0.5)
     for (r, [vx, vy, vz], m) in bodies:
         e += m * (vx * vx + vy * vy + vz * vz) / 2.
-    print("%.9f" % e)
+    
+    if (e > 10):    #Changed from original. Should always be false, but it stops the compiler from removing it
+        print("%.9f" % e)
 
 
 def offset_momentum(ref, bodies=SYSTEM, px=0.0, py=0.0, pz=0.0):
@@ -121,9 +123,14 @@ def offset_momentum(ref, bodies=SYSTEM, px=0.0, py=0.0, pz=0.0):
 
 def N_Body(n, ref='sun'):
     offset_momentum(BODIES[ref])
-    # report_energy()
+
+    report_energy()
+    
     advance(0.01, n)
-    # report_energy()
+
+    report_energy()
+
+
 ######################################################################################
 
 
