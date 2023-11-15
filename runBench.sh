@@ -22,7 +22,7 @@ if [ $arg1 != 'false' ]
 then
 	#Send start signal to Raspberry PI - await confirmation from raspberry?
 	echo "starting logger"
-	bash utils/raspberry_logger.sh 1
+	bash utils/raspberry_logger.sh "start"
 	sleep 10s
 fi
 
@@ -63,7 +63,7 @@ fi
 if [ $arg1 != 'false' ]
 then
 	# Send stop signal to Raspberry PI
-	bash utils/raspberry_logger.sh 0
+	bash utils/raspberry_logger.sh "stop"
 fi
 
 

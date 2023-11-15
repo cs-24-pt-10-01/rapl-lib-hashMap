@@ -1,12 +1,21 @@
 #!/bin/bash
 
-HOSTNAME="seff_jr"
 IP="192.168.0.5"
+PORT=":5000"
 
-# Command to run on Raspberry PI
-# nohup is used to stop hanging on the session and prints goes to log.out
-COMMAND="nohup bash BenchManagementRaspbPI/logging_manager.sh $1 > log.out"
+#Send http request to raspberry to start or stop logging
+#$1: "start" or "stop"
+if [ "$1" == "start"  ] || [ "$1" == "stop" ]; then
+    curl http://$IP$PORT/$1
+    # handling curl exit status
+    # inspired by https://everything.curl.dev/usingcurl/returns
+    res=$?
+    if test "$res" != "0"; then
+        echo "the curl command failed with: $res"
+        exit 1
+    fi
 
-# Call Raspberry PI with command
-# Uses -i ~/.ssh/id_rsa for public key use, rather than password auth
-ssh -i $HOME/.ssh/id_rsa $HOSTNAME@$IP $COMMAND &
+else
+    echo Bad input: "$1", expected "start" or "stop"
+    exit 1
+fi
