@@ -10,7 +10,7 @@ fn main() -> Result<()> {
         // Get a RAPL measurement and write it to the CSV file
         stop_rapl();
 
-        // Sleep for 300 milliseconds
+        // Sleep until the next measurement
         thread::sleep(Duration::from_millis(100));
     }
 }
