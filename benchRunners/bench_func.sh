@@ -7,7 +7,14 @@ runbenchmark(){
     echo --- Starting $language ---
     $cmd $input
     sleep 5s
-    bash utils/append_to_latest_csv.sh "$language$testName$inputSize"
+
+    #adding input or inputSize, depending on whether inputSize is present.
+    if [ -n "$inputSize" ]; then
+        bash utils/append_to_latest_csv.sh "${language}_${testName}_${inputSize}"
+    else
+        bash utils/append_to_latest_csv.sh "${language}_${testName}_${input}"
+    fi
+
     echo --- $language Done ---
     echo
 }
