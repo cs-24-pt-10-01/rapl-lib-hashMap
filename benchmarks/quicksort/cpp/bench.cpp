@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 extern "C" {
@@ -86,24 +88,35 @@ template<typename RandomAccessIterator>
 // Code from rosetta stop
 
 
-// read a vector of integers from a string (comma seperated)
+// read a vector from a string, inspired by secound answer of https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 vector<int> IntVectorFromString(std::string str){
-    vector<int> result;
+  vector<int> result;
+  std::stringstream ss (str);
+  std::string item;
 
-    size_t pos = 0;
-    while( pos = str.find(",") != std::string::npos){
+  while (getline(ss, item, ',')) {
+    result.push_back(std::atoi(item.c_str()));
+  }
 
-        std::string token = str.substr(0, str.find(","));
-        result.push_back(std::atoi(token.c_str()));
-        str.erase(0, pos + 1);
-    }
-    result.push_back(std::atoi(str.c_str()));
-    return result;
+  return result;
+}
+
+// function for reading file, inspired by https://www.w3schools.com/cpp/cpp_files.asp
+std::string readFile(std::string path){
+  ifstream file(path);
+  std::string str;
+
+  while (getline(file, str)) {
+    // do nothing
+  }
+  file.close();
+
+  return str;
 }
 
 int main(int argc, char *argv[]) {
 
-    std::string inputRaw = std::string(argv[2]);
+    std::string inputRaw = readFile(argv[2]);
 
     // removing brackets
     inputRaw.erase(remove(inputRaw.begin(), inputRaw.end(), ']'), inputRaw.end());

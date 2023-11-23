@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.IO;
 
 // inspired from https://stackoverflow.com/questions/24374658/check-the-operating-system-at-compile-time 
 #if _LINUX
@@ -13,10 +14,13 @@ using System.Text.Json;
 #endif
 
 string[] arguments = Environment.GetCommandLineArgs();
+
 uint count = uint.Parse(arguments[1]);
 
-// converting argument as it was a json array
-List<uint> data = JsonSerializer.Deserialize<List<uint>>(arguments[2]);
+// reading input file
+string json = File.ReadAllText(arguments[2]);
+List<uint> data = JsonSerializer.Deserialize<List<uint>>(json);
+
 // converting list to array
 uint[] mergeParam = data.ToArray();
 

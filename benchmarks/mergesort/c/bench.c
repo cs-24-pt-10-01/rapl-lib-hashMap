@@ -70,10 +70,29 @@ void merge_sort (int *a, int n) {
     merge(a, n, m);
 }
 
+// function for reading file, inspired by https://stackoverflow.com/questions/3501338/c-read-file-line-by-line
+char* readFile(char* path){
+    FILE * fp;
+    char * line = NULL; // the result
+    size_t len = 0;
+    size_t read;
+
+    fp = fopen(path, "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+    
+    while ((read = getline(&line, &len, fp)) != -1){
+        // do nothing
+    }
+
+    fclose(fp);
+    return line;
+}
+
 
 int main(int argc, char *argv[]) {    
     // getting raw merge input
-    char* mergeParamRaw = argv[2];
+    char* mergeParamRaw = readFile(argv[2]);
 
     // removing brackets
     RemoveChars(mergeParamRaw, '[');
@@ -100,7 +119,9 @@ int main(int argc, char *argv[]) {
 
         // stopping compiler optimization
         if (mergeParamCopy[mergeParamLen - 1] < 42){
-            printf("%d\n", mergeParamCopy[0]);
+            for (int j = 0; j < mergeParamLen; j++) {
+                printf("%d\n", mergeParamCopy[j]);
+            }
         }
 
         free(mergeParamCopy);

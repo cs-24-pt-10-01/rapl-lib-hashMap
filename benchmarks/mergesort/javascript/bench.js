@@ -1,10 +1,11 @@
 const os = require("os");
+const fs = require("fs");
 
 // getting arguments
-let data = process.argv[3];
+let mergeParam = fs.readFileSync(process.argv[3]).toString();
+
 // formatting input into a list of numbers
-data = data.replace("[", "").replace("]", "").split(",").map(Number);
-const mergeParam = data
+mergeParam = mergeParam.replace("[", "").replace("]", "").split(",").map(Number);
 const runCount = process.argv[2];
 
 // finding path depending on OS

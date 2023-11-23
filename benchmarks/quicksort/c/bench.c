@@ -66,10 +66,28 @@ void quicksort(int *A, int len) {
   quicksort(A + i, len - i);
 }
 
+// function for reading file, inspired by https://stackoverflow.com/questions/3501338/c-read-file-line-by-line
+char* readFile(char* path){
+    FILE * fp;
+    char * line = NULL; // the result
+    size_t len = 0;
+    size_t read;
+
+    fp = fopen(path, "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+    
+    while ((read = getline(&line, &len, fp)) != -1){
+        // do nothing
+    }
+
+    fclose(fp);
+    return line;
+}
 
 int main(int argc, char *argv[]) {    
     // getting raw input
-    char* inputRaw = argv[2];
+    char* inputRaw = readFile(argv[2]);
 
     // removing brackets
     RemoveChars(inputRaw, '[');

@@ -4,7 +4,11 @@ from ctypes import *
 import sys
 import platform
 
-sort_param = sys.argv[2]
+def readFile(path):
+    with open(path, "r") as file:
+        return file.read()
+
+sort_param = readFile(sys.argv[2])
 # formatting sort_param into a list of integers
 sort_param = sort_param.replace("[", "").replace("]", "").split(",")
 sort_param = [int(i) for i in sort_param]

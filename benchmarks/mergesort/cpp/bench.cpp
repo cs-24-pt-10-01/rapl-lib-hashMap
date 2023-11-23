@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 extern "C" {
@@ -33,36 +35,45 @@ template<typename RandomAccessIterator>
   mergesort(first, last, std::less<typename std::iterator_traits<RandomAccessIterator>::value_type>());
 }
 
-// read a vector of integers from a string (comma seperated)
-vector<int> IntVectorFromString(std::string str){
-    vector<int> result;
-
-    size_t pos = 0;
-    while( pos = str.find(",") != std::string::npos){
-
-        std::string token = str.substr(0, str.find(","));
-        result.push_back(std::atoi(token.c_str()));
-        str.erase(0, pos + 1);
-    }
-    result.push_back(std::atoi(str.c_str()));
-    return result;
-}
-
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // Rosetta code stop
 
+// read a vector from a string, inspired by secound answer of https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+vector<int> IntVectorFromString(std::string str){
+  vector<int> result;
+  std::stringstream ss (str);
+  std::string item;
+
+  while (getline(ss, item, ',')) {
+    result.push_back(std::atoi(item.c_str()));
+  }
+
+  return result;
+}
+
+// function for reading file, inspired by https://www.w3schools.com/cpp/cpp_files.asp
+std::string readFile(std::string path){
+  ifstream file(path);
+  std::string str;
+
+  while (getline(file, str)) {
+    // do nothing
+  }
+  file.close();
+
+  return str;
+}
+
 int main(int argc, char *argv[]) {
 
-    std::string mergeParamRaw = std::string(argv[2]);
+    std::string mergeParamRaw = readFile(argv[2]);
 
     // removing brackets
     mergeParamRaw.erase(remove(mergeParamRaw.begin(), mergeParamRaw.end(), ']'), mergeParamRaw.end());
     mergeParamRaw.erase(remove(mergeParamRaw.begin(), mergeParamRaw.end(), '['), mergeParamRaw.end());
-    
 
     // getting numbers from mergeParamRaw
     vector<int> mergeParam = IntVectorFromString(mergeParamRaw);
-    
 
     int count = std::atoi(argv[1]);
 
@@ -78,7 +89,10 @@ int main(int argc, char *argv[]) {
 
         // stopping compiler optimization
         if (mergeParamCopy.size() < 42){
-            std::cout << "Result: " << mergeParamCopy[0] << std::endl;
+            for (int i = 0; i < mergeParamCopy.size(); i++){
+                std::cout << mergeParamCopy[i] << " ";
+            }
+            std::cout << std::endl;
         }
     }
 

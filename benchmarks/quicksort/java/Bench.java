@@ -1,12 +1,20 @@
 // general benchmark imports
+import java.io.IOException;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 // benchmark specific imports
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 class Bench {
+    public static String readFile(String path) throws IOException{
+        return new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+    }
+
     public static void main(String[] args) {
 
         // Finding os
@@ -37,7 +45,17 @@ class Bench {
         
         // Getting arguments
         // converting json array to java array
-        String[] data = args[1].replace("[","").replace("]","").split(",");
+
+        String input;
+        try {
+            input = readFile(args[1]);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Could not read file");
+            return;
+        }
+
+        String[] data = input.replace("[","").replace("]","").split(",");
         List<Long> sortParam = Arrays.stream(data).map(String::trim).map(Long::valueOf).toList();
         int loop_count = Integer.parseInt(args[0]);
 
