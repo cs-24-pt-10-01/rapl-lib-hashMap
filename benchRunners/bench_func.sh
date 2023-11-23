@@ -1,6 +1,6 @@
 runbenchmark(){
     language=$1
-    testName=$2
+    name=$2
     cmd=$3
     input=$4
     inputSize=$5
@@ -17,9 +17,9 @@ runbenchmark(){
 
     #adding input or inputSize, depending on whether inputSize is present.
     if [ -n "$inputSize" ]; then
-        bash utils/append_to_latest_csv.sh "${language}_${testName}_${inputSize}"
+        bash utils/append_to_latest_csv.sh "${language}_${name}_${inputSize}"
     else
-        bash utils/append_to_latest_csv.sh "${language}_${testName}_${input}"
+        bash utils/append_to_latest_csv.sh "${language}_${name}_${input}"
     fi
 
     # stop message
