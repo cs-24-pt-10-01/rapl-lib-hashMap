@@ -62,13 +62,12 @@ Delete:
 
 `sc delete rapl`
 
-## How to run tests
-This may be changed in the future
+## How to run benchmarks
 
 ### how to run with runBench.sh (only works on linux)
 1. Build the rapl code with `cargo build --release` from root
-2. Call the script with `sudo sh runBench.sh`
-3. The results will be put in csv files in root after the script is finished 
+2. Call the script with `sudo sh runBench.sh` (use taskset for CPU affinity https://manpages.ubuntu.com/manpages/trusty/man1/taskset.1.html)
+3. The results will be put in csv files in the results folder after the script is finished 
 
 note: running the script from SSH requires the usage of tools like nohup:
 ``` sudo nohup sh runBench.sh ```
