@@ -6,6 +6,7 @@ use std::{
     sync::Once,
     time::{SystemTime, UNIX_EPOCH},
     collections::HashMap,
+    thread,
 };
 use thiserror::Error;
 
@@ -96,74 +97,81 @@ pub fn stop_rapl(id: &str) {
     };
 
     // Write the RAPL start and end values to the CSV
-    write_to_csv(
-        (
-            id,
-            timestamp_start,
-            timestamp_end,
-            pp0_start,
-            pp0_end,
-            pp1_start,
-            pp1_end,
-            pkg_start,
-            pkg_end,
-            dram_start,
-            dram_end,
-        ),
-        [
-            "ID",
-            "TimeStart",
-            "TimeEnd",
-            "PP0Start",
-            "PP0End",
-            "PP1Start",
-            "PP1End",
-            "PkgStart",
-            "PkgEnd",
-            "DramStart",
-            "DramEnd",
-        ],
-    )
-    .expect("failed to write to CSV");
+    thread::spawn(move || {
+        write_to_csv(
+            (
+                id,
+                timestamp_start,
+                timestamp_end,
+                pp0_start,
+                pp0_end,
+                pp1_start,
+                pp1_end,
+                pkg_start,
+                pkg_end,
+                dram_start,
+                dram_end,
+            ),
+            [
+                "ID",
+                "TimeStart",
+                "TimeEnd",
+                "PP0Start",
+                "PP0End",
+                "PP1Start",
+                "PP1End",
+                "PkgStart",
+                "PkgEnd",
+                "DramStart",
+                "DramEnd",
+            ],
+        )
+        .expect("failed to write to CSV");
+    });
+    
 }
 
 #[cfg(amd)]
-pub fn stop_rapl() {
+pub fn stop_rapl(id: &str) {
     // Read the RAPL end values
     let (core_end, pkg_end) = read_rapl_registers();
 
     // Get the current time in milliseconds since the UNIX epoch
     let timestamp_end = get_timestamp_millis();
 
+    // taking ownership of id
+    let str = id.to_owned();
+
     // Load in the RAPL start value
     let (timestamp_start, (core_start, pkg_start)) = unsafe {
         let rapls = RAPLS.get().expect("hashMap not initialized, (can occur from missing start call)");
-        let str = id.to_owned();
         rapls.get(&str).expect("Missing start call")
     };
 
     // Write the RAPL start and end values to the CSV
-    write_to_csv(
-        (
-            id,
-            timestamp_start,
-            timestamp_end,
-            core_start,
-            core_end,
-            pkg_start,
-            pkg_end,
-        ),
-        [
-            "ID",
-            "TimeStart",
-            "TimeEnd",
-            "CoreStart",
-            "CoreEnd",
-            "PkgStart",
-            "PkgEnd",
-        ],
-    )
-    .expect("failed to write to CSV");
+    thread::spawn(move || {
+        write_to_csv(
+            (
+                str,
+                timestamp_start,
+                timestamp_end,
+                core_start,
+                core_end,
+                pkg_start,
+                pkg_end,
+            ),
+            [
+                "ID",
+                "TimeStart",
+                "TimeEnd",
+                "CoreStart",
+                "CoreEnd",
+                "PkgStart",
+                "PkgEnd",
+            ],
+        )
+        .expect("failed to write to CSV");
+    });
 }
 
 fn get_timestamp_millis() -> u128 {
