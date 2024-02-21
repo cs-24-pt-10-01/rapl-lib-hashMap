@@ -89,10 +89,12 @@ pub fn stop_rapl(id: &str) {
     // Get the current time in milliseconds since the UNIX epoch
     let timestamp_end = get_timestamp_millis();
 
+    // taking ownership of id
+    let str = id.to_owned();
+
     // Load in the RAPL start value
     let (timestamp_start, (pp0_start, pp1_start, pkg_start, dram_start)) = unsafe {
         let rapls = RAPLS.get().expect("hashMap not initialized, (can occur from missing start call)");
-        let str = id.to_owned();
         rapls.get(&str).expect("Missing start call")
     };
 
@@ -100,7 +102,7 @@ pub fn stop_rapl(id: &str) {
     thread::spawn(move || {
         write_to_csv(
             (
-                id,
+                str,
                 timestamp_start,
                 timestamp_end,
                 pp0_start,
