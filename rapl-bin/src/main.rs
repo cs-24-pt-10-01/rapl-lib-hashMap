@@ -1,14 +1,14 @@
 use anyhow::Result;
-use rapl_lib::ffi::{start_rapl, stop_rapl};
+use rapl_lib::ffi::{start_rapl_rust, stop_rapl_rust};
 use std::{thread, time::Duration};
 
 fn main() -> Result<()> {
     // Call start_rapl() to initialize the RAPL driver on Windows
-    start_rapl();
+    start_rapl_rust("test");
 
     loop {
         // Get a RAPL measurement and write it to the CSV file
-        stop_rapl();
+        stop_rapl_rust("test");
 
         // Sleep until the next measurement
         thread::sleep(Duration::from_millis(100));

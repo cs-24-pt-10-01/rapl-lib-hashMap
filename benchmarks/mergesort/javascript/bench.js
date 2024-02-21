@@ -44,18 +44,21 @@ const koffi = require('koffi');
 const lib = koffi.load(libPath);
 
 // loading functions
-const start = lib.func('int start_rapl()');
-const stop = lib.func('void stop_rapl()');
+const start = lib.func('int start_rapl(char* id)');
+const stop = lib.func('void stop_rapl(char* id)');
 
 // running benchmark
 for (let i = 0; i < runCount; i++) {
 
+    start("7");
     let toBeSorted = Array.from(mergeParam);
-    start();
+    
+    start("hej");
 
     mergeSortInPlaceFast(toBeSorted);
 
-    stop();
+    stop("hej");
+    stop("7");
 
     if (toBeSorted.length < 42){
         console.log(toBeSorted);

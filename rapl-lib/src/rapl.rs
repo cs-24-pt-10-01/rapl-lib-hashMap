@@ -5,8 +5,10 @@ use std::{
     fs::{File, OpenOptions},
     sync::Once,
     time::{SystemTime, UNIX_EPOCH},
+    collections::HashMap,
 };
 use thiserror::Error;
+
 
 // Use the OS specific implementation
 #[cfg(target_os = "linux")]
@@ -30,16 +32,18 @@ pub enum RaplError {
 }
 
 #[cfg(amd)]
-static mut RAPL_START: (u128, (u64, u64)) = (0, (0, 0));
+//static mut RAPL_START: (u128, (u64, u64)) = (0, (0, 0));
+static mut RAPLS: OnceCell<HashMap<String, (u128, (u64, u64))>> = OnceCell::new();
 
 #[cfg(intel)]
-static mut RAPL_START: (u128, (u64, u64, u64, u64)) = (0, (0, 0, 0, 0));
+//static mut RAPL_START: (u128, (u64, u64, u64, u64)) = (0, (0, 0, 0, 0));
+static mut RAPLS: OnceCell<HashMap<String, (u128, (u64, u64, u64, u64))>> = OnceCell::new();
 
 static RAPL_INIT: Once = Once::new();
 static RAPL_POWER_UNITS: OnceCell<u64> = OnceCell::new();
 static mut CSV_WRITER: Option<Writer<File>> = None;
 
-pub fn start_rapl() {
+pub fn start_rapl(id: &str) {
     // Run the OS specific start_rapl_impl function
     start_rapl_impl();
 
@@ -60,11 +64,24 @@ pub fn start_rapl() {
 
     // Safety: RAPL_START is only accessed in this function and only from a single thread
     let rapl_registers = read_rapl_registers();
-    unsafe { RAPL_START = (timestamp_start, rapl_registers) };
+    unsafe {
+        match RAPLS.get_mut() {
+            // hashmap is initialized
+            Some(rapls) => {
+                rapls.insert(id.to_owned(), (timestamp_start, rapl_registers));
+            }
+            // hashmap is not initialized
+            None => {
+                let mut rapls = HashMap::new();
+                rapls.insert(id.to_owned(), (timestamp_start, rapl_registers));
+                RAPLS.set(rapls).expect("Could not initialize hashMap");
+            }
+        }
+    };
 }
 
 #[cfg(intel)]
-pub fn stop_rapl() {
+pub fn stop_rapl(id: &str) {
     // Read the RAPL end values
     let (pp0_end, pp1_end, pkg_end, dram_end) = read_rapl_registers();
 
@@ -72,11 +89,16 @@ pub fn stop_rapl() {
     let timestamp_end = get_timestamp_millis();
 
     // Load in the RAPL start value
-    let (timestamp_start, (pp0_start, pp1_start, pkg_start, dram_start)) = unsafe { RAPL_START };
+    let (timestamp_start, (pp0_start, pp1_start, pkg_start, dram_start)) = unsafe {
+        let rapls = RAPLS.get().expect("hashMap not initialized, (can occur from missing start call)");
+        let str = id.to_owned();
+        rapls.get(&str).expect("Missing start call")
+    };
 
     // Write the RAPL start and end values to the CSV
     write_to_csv(
         (
+            id,
             timestamp_start,
             timestamp_end,
             pp0_start,
@@ -89,6 +111,7 @@ pub fn stop_rapl() {
             dram_end,
         ),
         [
+            "ID",
             "TimeStart",
             "TimeEnd",
             "PP0Start",
@@ -113,11 +136,16 @@ pub fn stop_rapl() {
     let timestamp_end = get_timestamp_millis();
 
     // Load in the RAPL start value
-    let (timestamp_start, (core_start, pkg_start)) = unsafe { RAPL_START };
+    let (timestamp_start, (core_start, pkg_start)) = unsafe {
+        let rapls = RAPLS.get().expect("hashMap not initialized, (can occur from missing start call)");
+        let str = id.to_owned();
+        rapls.get(&str).expect("Missing start call")
+    };
 
     // Write the RAPL start and end values to the CSV
     write_to_csv(
         (
+            id,
             timestamp_start,
             timestamp_end,
             core_start,
@@ -126,6 +154,7 @@ pub fn stop_rapl() {
             pkg_end,
         ),
         [
+            "ID",
             "TimeStart",
             "TimeEnd",
             "CoreStart",
