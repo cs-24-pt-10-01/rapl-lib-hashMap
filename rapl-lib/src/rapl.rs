@@ -107,10 +107,28 @@ pub fn stop_rapl(id: &str) {
         rapls.get(&str).expect("Missing start call")
     };
 
-    // Write the RAPL start and end values to the CSV
+    // stopping to fast calls from being recorded
+    if (timestamp_end - timestamp_start) < 1 {
+        return;
+    }
+
     thread::spawn(move || {
-        write_to_csv(
-            (
+        // Opening/creating file
+        let mut file = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(format!(
+                "{}_{}.csv",
+                get_cpu_type(),
+                RAPL_POWER_UNITS
+                    .get()
+                    .expect("failed to get RAPL power units")
+            ))
+            .expect("could not create file");
+        // Writing csv
+        file.write_all(
+            format!(
+                "{},{},{},{},{},{},{},{},{},{},{}\n",
                 str,
                 timestamp_start,
                 timestamp_end,
@@ -122,22 +140,10 @@ pub fn stop_rapl(id: &str) {
                 pkg_end,
                 dram_start,
                 dram_end,
-            ),
-            [
-                "ID",
-                "TimeStart",
-                "TimeEnd",
-                "PP0Start",
-                "PP0End",
-                "PP1Start",
-                "PP1End",
-                "PkgStart",
-                "PkgEnd",
-                "DramStart",
-                "DramEnd",
-            ],
+            )
+            .as_bytes(),
         )
-        .expect("failed to write to CSV");
+        .expect("could not write to csv");
     });
 }
 
@@ -177,7 +183,7 @@ pub fn stop_rapl(id: &str) {
                 RAPL_POWER_UNITS
                     .get()
                     .expect("failed to get RAPL power units")
-            )) 
+            ))
             .expect("could not create file");
         // Writing csv
         file.write_all(
