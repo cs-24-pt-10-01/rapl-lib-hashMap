@@ -2,13 +2,15 @@ use csv::{Writer, WriterBuilder};
 use once_cell::sync::OnceCell;
 use serde::Serialize;
 use std::{
+    collections::HashMap,
     fs::{File, OpenOptions},
     sync::Once,
-    time::{SystemTime, UNIX_EPOCH},
-    collections::HashMap,
     thread,
+    time::{SystemTime, UNIX_EPOCH},
+    vec::Vec,
 };
 use thiserror::Error;
+use std::io::prelude::*;
 
 
 // Use the OS specific implementation
@@ -36,9 +38,16 @@ pub enum RaplError {
 //static mut RAPL_START: (u128, (u64, u64)) = (0, (0, 0));
 static mut RAPLS: OnceCell<HashMap<String, (u128, (u64, u64))>> = OnceCell::new();
 
+#[cfg(amd)]
+static mut WRITE_QUEUE: OnceCell<Vec<(String, u128, u128, u64, u64, u64, u64)>> = OnceCell::new();
+
 #[cfg(intel)]
 //static mut RAPL_START: (u128, (u64, u64, u64, u64)) = (0, (0, 0, 0, 0));
 static mut RAPLS: OnceCell<HashMap<String, (u128, (u64, u64, u64, u64))>> = OnceCell::new();
+
+#[cfg(intel)]
+static mut WRITE_QUEUE: OnceCell<Vec<(String, u128, u128, u64, u64, u64, u64)>> = OnceCell::new();
+
 
 static RAPL_INIT: Once = Once::new();
 static RAPL_POWER_UNITS: OnceCell<u64> = OnceCell::new();
@@ -94,7 +103,9 @@ pub fn stop_rapl(id: &str) {
 
     // Load in the RAPL start value
     let (timestamp_start, (pp0_start, pp1_start, pkg_start, dram_start)) = unsafe {
-        let rapls = RAPLS.get().expect("hashMap not initialized, (can occur from missing start call)");
+        let rapls = RAPLS
+            .get()
+            .expect("hashMap not initialized, (can occur from missing start call)");
         rapls.get(&str).expect("Missing start call")
     };
 
@@ -130,7 +141,6 @@ pub fn stop_rapl(id: &str) {
         )
         .expect("failed to write to CSV");
     });
-    
 }
 
 #[cfg(amd)]
@@ -146,15 +156,48 @@ pub fn stop_rapl(id: &str) {
 
     // Load in the RAPL start value
     let (timestamp_start, (core_start, pkg_start)) = unsafe {
-        let rapls = RAPLS.get().expect("hashMap not initialized, (can occur from missing start call)");
+        let rapls = RAPLS
+            .get()
+            .expect("hashMap not initialized, (can occur from missing start call)");
         rapls.get(&str).expect("Missing start call")
     };
 
-    // Write the RAPL start and end values to the CSV
+    // stopping to fast calls from being recorded
+    if (timestamp_end - timestamp_start) < 1 {
+        return;
+    }
+
+    // Starting thread to write results to csv
     thread::spawn(move || {
+        // Opening/creating file
+        let mut file = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("test.csv") //TODO FIX NAMING
+            .expect("could not create file");
+        // Writing csv
+        file.write_all(
+            format!(
+                "{},{},{},{},{},{},{}\n",
+                str,
+                timestamp_start,
+                timestamp_end,
+                core_start,
+                core_end,
+                pkg_start,
+                pkg_end
+            )
+            .as_bytes(),
+        ).expect("could not write to csv");
+    });
+}
+
+#[cfg(amd)]
+fn queue_writer(queue: &mut Vec<(String, u128, u128, u64, u64, u64, u64)>) {
+    for (id, timestamp_start, timestamp_end, core_start, core_end, pkg_start, pkg_end) in queue {
         write_to_csv(
             (
-                str,
+                id,
                 timestamp_start,
                 timestamp_end,
                 core_start,
@@ -173,7 +216,7 @@ pub fn stop_rapl(id: &str) {
             ],
         )
         .expect("failed to write to CSV");
-    });
+    }
 }
 
 fn get_timestamp_millis() -> u128 {
