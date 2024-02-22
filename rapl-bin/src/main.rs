@@ -1,18 +1,22 @@
-use anyhow::Result;
+use anyhow::{Ok, Result};
 use rapl_lib::ffi::{start_rapl_rust, stop_rapl_rust};
 use std::{thread, time::Duration};
 
+
 fn main() -> Result<()> {
     // Call start_rapl() to initialize the RAPL driver on Windows
-    start_rapl_rust("test");
+    const attack: u64 = 20;
 
-    loop {
-        // Get a RAPL measurement and write it to the CSV file
-        stop_rapl_rust("test");
-
-        // Sleep until the next measurement
-        thread::sleep(Duration::from_millis(100));
+    for i in 0..100 {
+        for i in 0..attack {
+            start_rapl_rust("test");
+        }
+        for i in 0..attack {
+            stop_rapl_rust("test");
+        }
+        thread::sleep(Duration::from_millis(1));
     }
+    Ok(())
 }
 
 /*
