@@ -1,6 +1,7 @@
 use csv::{Writer, WriterBuilder};
 use once_cell::sync::OnceCell;
 use serde::Serialize;
+use std::io::prelude::*;
 use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
@@ -10,8 +11,6 @@ use std::{
     vec::Vec,
 };
 use thiserror::Error;
-use std::io::prelude::*;
-
 
 // Use the OS specific implementation
 #[cfg(target_os = "linux")]
@@ -47,7 +46,6 @@ static mut RAPLS: OnceCell<HashMap<String, (u128, (u64, u64, u64, u64))>> = Once
 
 #[cfg(intel)]
 static mut WRITE_QUEUE: OnceCell<Vec<(String, u128, u128, u64, u64, u64, u64)>> = OnceCell::new();
-
 
 static RAPL_INIT: Once = Once::new();
 static RAPL_POWER_UNITS: OnceCell<u64> = OnceCell::new();
@@ -173,22 +171,23 @@ pub fn stop_rapl(id: &str) {
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open("test.csv") //TODO FIX NAMING
+            .open(format!(
+                "{}_{}.csv",
+                get_cpu_type(),
+                RAPL_POWER_UNITS
+                    .get()
+                    .expect("failed to get RAPL power units")
+            )) 
             .expect("could not create file");
         // Writing csv
         file.write_all(
             format!(
                 "{},{},{},{},{},{},{}\n",
-                str,
-                timestamp_start,
-                timestamp_end,
-                core_start,
-                core_end,
-                pkg_start,
-                pkg_end
+                str, timestamp_start, timestamp_end, core_start, core_end, pkg_start, pkg_end
             )
             .as_bytes(),
-        ).expect("could not write to csv");
+        )
+        .expect("could not write to csv");
     });
 }
 
